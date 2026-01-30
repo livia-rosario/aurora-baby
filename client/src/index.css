@@ -1,14 +1,10 @@
+/* Google Fonts: Nunito (Body) and Poppins (Headings) */
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap");
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
-
-/* Google Fonts: Quicksand (Body) and Comfortaa (Headings) */
-@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Comfortaa:wght@300;400;500;600;700&display=swap");
-
-/* Custom Logo Fonts */
-@import url("https://fonts.cdnfonts.com/css/lemon-friday");
-@import url("https://fonts.cdnfonts.com/css/milky-cookies");
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -177,7 +173,7 @@
   body {
     background-color: var(--base-bg);
     color: var(--soft-brown);
-    font-family: "Quicksand", sans-serif;
+    font-family: "Nunito", sans-serif;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -197,16 +193,14 @@
   h4,
   h5,
   h6 {
-    font-family: "Comfortaa", sans-serif;
+    font-family: "Poppins", sans-serif;
   }
 }
 
 /* CSS Variables for Font Families */
 :root {
-  --font-aurora: "Lemon Friday", cursive;
-  --font-baby: "Milky Cookies", cursive;
-  --font-heading: "Comfortaa", sans-serif;
-  --font-body: "Quicksand", sans-serif;
+  --font-heading: "Poppins", sans-serif;
+  --font-body: "Nunito", sans-serif;
 }
 
 /* Smooth Scroll */
