@@ -60,13 +60,16 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
           <div className="flex flex-col gap-4">
             {/* Imagem Principal */}
             <div
-              className="relative rounded-2xl overflow-hidden flex items-center justify-center min-h-96 group"
-              style={{ backgroundColor: "rgba(253, 214, 146, 0.1)" }}
+              className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border p-6"
+              style={{
+                backgroundColor: "rgba(253, 214, 146, 0.1)",
+                borderColor: "rgba(82, 67, 48, 0.12)",
+              }}
             >
               <img
                 src={currentImage}
                 alt={`${product.name} ${currentImageIndex + 1}`}
-                className="w-full h-full object-contain"
+                className="h-full w-full object-contain"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src =
                     "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop";
@@ -101,12 +104,12 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
             {/* Miniaturas */}
             {allImages.length > 1 && (
-              <div className="flex gap-2 justify-center">
+              <div className="flex flex-wrap justify-center gap-3">
                 {allImages.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentImageIndex(idx)}
-                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`h-16 w-16 overflow-hidden rounded-xl border-2 transition-all ${
                       idx === currentImageIndex ? "border-accent-coral" : "border-gray-200"
                     }`}
                     style={{
@@ -117,7 +120,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                     <img
                       src={img}
                       alt={`Thumbnail ${idx + 1}`}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-contain"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
                           "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=100&h=100&fit=crop";
