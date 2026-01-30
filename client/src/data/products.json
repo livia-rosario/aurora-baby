@@ -1,0 +1,189 @@
+[
+  {
+    "id": "jogo-lencol",
+    "name": "Jogo de Lençol",
+    "price": 189,
+    "category": "Cama & Berço",
+    "description": "Jogo completo com toque macio e aconchego. Perfeito para o berço do seu bebê dormir tranquilo e seguro. Feito com tecido de qualidade, respirável e fácil de lavar.",
+    "specs": [
+      "3 peças: lençol de cima com vira, lençol com elástico e fronha",
+      "100% algodão",
+      "Tecido duplo e respirável",
+      "Acabamento que evita desfiar",
+      "Medidas: 70cm x 140cm"
+    ],
+    "images": {
+      "main": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop",
+      "gallery": [
+        "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop"
+      ]
+    },
+    "whatsappMessage": "Olá! Gostaria de pedir o Jogo de Lençol (R$ 189,00). Qual seria o prazo de entrega?"
+  },
+  {
+    "id": "fralda-boca",
+    "name": "Pano de Boca",
+    "price": 42,
+    "category": "Cuidados Infantis",
+    "description": "Pano de boca com toque suave e macio. Excelente para passeios, hora da papinha e manter o bebê seco e limpo. Ideal para as mamães que querem algo prático e de qualidade.",
+    "specs": [
+      "100% algodão puro",
+      "Tecido duplo e respirável",
+      "52 fios/cm² — muito macio",
+      "Acabamento que evita desfiar",
+      "Medidas: 35cm x 35cm"
+    ],
+    "images": {
+      "main": "/images/products/boca-tamanho.png",
+      "gallery": [
+        "/images/products/boca.png"
+      ]
+    },
+    "whatsappMessage": "Olá! Gostaria de pedir o Pano de Boca (R$ 42,00). Qual seria o prazo de entrega?"
+  },
+  {
+    "id": "fralda-ombro",
+    "name": "Fralda de Ombro",
+    "price": 59,
+    "category": "Cuidados Infantis",
+    "description": "Fralda de ombro macia e absorvente. Perfeita para proteger a roupa durante a amamentação e os arrotos. Tecido de qualidade que cuida do bebê e da mamãe.",
+    "specs": [
+      "100% algodão",
+      "Tecido duplo e respirável",
+      "Muito macio ao toque",
+      "Acabamento que evita desfiar",
+      "Medidas: 35cm x 70cm"
+    ],
+    "images": {
+      "main": "/images/products/ombro-tamanho.png",
+      "gallery": [
+        "/images/products/ombro.png"
+      ]
+    },
+    "whatsappMessage": "Olá! Gostaria de pedir a Fralda de Ombro (R$ 59,00). Qual seria o prazo de entrega?"
+  },
+  {
+    "id": "fralda-passeio",
+    "name": "Fralda de Passeio",
+    "price": 65,
+    "category": "Cuidados Infantis",
+    "description": "Fralda grande e versátil para levar a qualquer lugar. Use no carro, no passeio, na praia ou em casa. Tecido macio que o bebê vai amar.",
+    "specs": [
+      "100% algodão",
+      "Tecido duplo e respirável",
+      "Muito macio e absorvente",
+      "Acabamento que evita desfiar",
+      "Medidas: 70cm x 70cm"
+    ],
+    "images": {
+      "main": "/images/products/passeio-tamanho.png",
+      "gallery": [
+        "/images/products/passeio.png"
+      ]
+    },
+    "whatsappMessage": "Olá! Gostaria de pedir a Fralda de Passeio (R$ 65,00). Qual seria o prazo de entrega?"
+  },
+  {
+    "id": "enxugador",
+    "name": "Enxugador",
+    "price": 89,
+    "category": "Banho & Higiene",
+    "description": "Enxugador grande e macio para secar o bebê após o banho. Tecido de qualidade que seca rápido e é super confortável. Ideal para usar todos os dias.",
+    "specs": [
+      "100% algodão",
+      "Tecido duplo e respirável",
+      "Muito macio e absorvente",
+      "Acabamento que evita desfiar",
+      "Medidas: 70cm x 120cm"
+    ],
+    "images": {
+      "main": "/images/products/enxugador-tamanho.png",
+      "gallery": [
+        "/images/products/enxugador-tamanho.png"
+      ]
+    },
+    "whatsappMessage": "Olá! Gostaria de pedir o Enxugador (R$ 89,00). Qual seria o prazo de entrega?"
+  },
+  {
+    "id": "toalha-capuz",
+    "name": "Toalha com Capuz",
+    "price": 118,
+    "category": "Banho & Higiene",
+    "description": "Toalha com capuz quentinho e aconchego. Perfeita para envolver o bebê após o banho. Tecido macio que o bebê vai adorar.",
+    "specs": [
+      "100% algodão",
+      "Tecido duplo e respirável",
+      "Com capuz para manter o bebê quentinho",
+      "Muito macio e absorvente",
+      "Medidas: 90cm x 75cm"
+    ],
+    "images": {
+      "main": "/images/products/capuz-tamanho.png",
+      "gallery": [
+        "/images/products/capuz-tamanho.png"
+      ]
+    },
+    "whatsappMessage": "Olá! Gostaria de pedir a Toalha com Capuz (R$ 118,00). Qual seria o prazo de entrega?"
+  },
+  {
+    "id": "manta",
+    "name": "Manta",
+    "price": 118,
+    "category": "Cama & Berço",
+    "description": "Manta quentinha e macia para o bebê. Use no berço, no carrinho ou no sofá. Tecido de qualidade que dura muitos anos.",
+    "specs": [
+      "100% algodão",
+      "Tecido duplo e respirável",
+      "Muito macio ao toque",
+      "Acabamento que evita desfiar",
+      "Medidas: 95cm x 95cm"
+    ],
+    "images": {
+      "main": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop",
+      "gallery": [
+        "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop"
+      ]
+    },
+    "whatsappMessage": "Olá! Gostaria de pedir a Manta (R$ 118,00). Qual seria o prazo de entrega?"
+  },
+  {
+    "id": "saquinho-maternidade",
+    "name": "Saquinho de Maternidade",
+    "price": 35,
+    "category": "Acessórios",
+    "description": "Saquinho prático para guardar os pertences do bebê. Perfeito para levar na maternidade ou em passeios. Tecido resistente e fácil de limpar.",
+    "specs": [
+      "100% algodão",
+      "Tecido duplo e respirável",
+      "Com alças para carregar",
+      "Acabamento que evita desfiar",
+      "Medidas: 30cm x 40cm"
+    ],
+    "images": {
+      "main": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop",
+      "gallery": [
+        "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop"
+      ]
+    },
+    "whatsappMessage": "Olá! Gostaria de pedir o Saquinho de Maternidade (R$ 35,00). Qual seria o prazo de entrega?"
+  },
+  {
+    "id": "toalha-mao",
+    "name": "Toalha de Mão",
+    "price": 45,
+    "category": "Banho & Higiene",
+    "description": "Toalha de mão macia e prática. Ideal para lancheiras e mochilha da criança. Tecido de qualidade que dura bastante.",
+    "specs": [
+      "100% algodão",
+      "Muito macio e absorvente",
+      "Medidas: 30cm x 45cm"
+    ],
+    "images": {
+      "main": "/images/products/toalha-mao-tamanho.png",
+      "gallery": [
+        "/images/products/toalha-mao-tamanho.png"
+      ]
+    },
+    "whatsappMessage": "Olá! Gostaria de pedir a Toalha de Mão (R$ 45,00). Qual seria o prazo de entrega?"
+  }
+]

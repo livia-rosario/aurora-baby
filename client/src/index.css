@@ -1,0 +1,220 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Google Fonts: Quicksand (Body) and Comfortaa (Headings) */
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Comfortaa:wght@300;400;500;600;700&display=swap");
+
+/* Custom Logo Fonts */
+@import url("https://fonts.cdnfonts.com/css/lemon-friday");
+@import url("https://fonts.cdnfonts.com/css/milky-cookies");
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  /* Aurora Baby Custom Colors */
+  --color-base-bg: #FDEBC8;
+  --color-accent-yellow: #FDD692;
+  --color-accent-coral: #F7B6B3;
+  --color-accent-blue: #B9E0F9;
+  --color-soft-brown: #524330;
+
+  /* Primary & Secondary */
+  --primary: #F7B6B3;
+  --primary-foreground: #FDEBC8;
+  --sidebar-primary: #F7B6B3;
+  --sidebar-primary-foreground: #FDEBC8;
+  --chart-1: #F7B6B3;
+  --chart-2: #B9E0F9;
+  --chart-3: #FDD692;
+  --chart-4: #524330;
+  --chart-5: #FDEBC8;
+
+  /* Spacing & Radius */
+  --radius: 0.65rem;
+
+  /* Light Theme */
+  --background: #FDEBC8;
+  --foreground: #524330;
+  --card: #FFFFFF;
+  --card-foreground: #524330;
+  --popover: #FFFFFF;
+  --popover-foreground: #524330;
+  --secondary: #FDD692;
+  --secondary-foreground: #524330;
+  --muted: #F7B6B3;
+  --muted-foreground: #524330;
+  --accent: #B9E0F9;
+  --accent-foreground: #524330;
+  --destructive: #EF4444;
+  --destructive-foreground: #FDEBC8;
+  --border: #E5D4C1;
+  --input: #E5D4C1;
+  --ring: #F7B6B3;
+  --sidebar: #FDEBC8;
+  --sidebar-foreground: #524330;
+  --sidebar-accent: #FDD692;
+  --sidebar-accent-foreground: #524330;
+  --sidebar-border: #E5D4C1;
+  --sidebar-ring: #F7B6B3;
+}
+
+.dark {
+  --background: #2A1F18;
+  --foreground: #F5E6D3;
+  --card: #3D2F26;
+  --card-foreground: #F5E6D3;
+  --popover: #3D2F26;
+  --popover-foreground: #F5E6D3;
+  --secondary: #D4A574;
+  --secondary-foreground: #2A1F18;
+  --muted: #8B6F47;
+  --muted-foreground: #D4A574;
+  --accent: #7DBFE0;
+  --accent-foreground: #2A1F18;
+  --destructive: #FF6B6B;
+  --destructive-foreground: #2A1F18;
+  --border: #4A3D34;
+  --input: #4A3D34;
+  --ring: #F7B6B3;
+  --sidebar: #3D2F26;
+  --sidebar-foreground: #F5E6D3;
+  --sidebar-accent: #D4A574;
+  --sidebar-accent-foreground: #2A1F18;
+  --sidebar-border: #4A3D34;
+  --sidebar-ring: #F7B6B3;
+}
+
+/* Custom CSS Variables for Aurora Baby */
+:root {
+  --base-bg: #FDEBC8;
+  --accent-yellow: #FDD692;
+  --accent-coral: #F7B6B3;
+  --accent-blue: #B9E0F9;
+  --soft-brown: #524330;
+}
+
+/* Tailwind Utilities for Aurora Baby Colors */
+@layer components {
+  .header-white-blur {
+    @apply bg-white/95 backdrop-blur-lg;
+  }
+
+  /**
+   * Custom container utility that centers content and adds responsive padding.
+   */
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+      max-width: 1280px;
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    background-color: var(--base-bg);
+    color: var(--soft-brown);
+    font-family: "Quicksand", sans-serif;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Comfortaa", sans-serif;
+  }
+}
+
+/* CSS Variables for Font Families */
+:root {
+  --font-aurora: "Lemon Friday", cursive;
+  --font-baby: "Milky Cookies", cursive;
+  --font-heading: "Comfortaa", sans-serif;
+  --font-body: "Quicksand", sans-serif;
+}
+
+/* Smooth Scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Smooth Transitions */
+* {
+  @apply transition-colors duration-200;
+}
