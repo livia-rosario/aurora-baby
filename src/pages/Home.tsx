@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { ProductModal } from "@/components/ProductModal";
 import { Button } from "@/components/ui/button";
 import InstagramFeed from "@/components/InstagramFeed";
+import Footer from "@/components/Footer";
 import { Instagram, Phone, Wallet, Clock, Truck, CreditCard } from "lucide-react";
 import products from "@/data/products.json";
 
@@ -27,10 +28,10 @@ export default function Home() {
   const selectedProduct = products.find((p) => p.id === selectedProductId) as Product | undefined;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "var(--base-bg)" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--base-bg)" }}>
       <Header />
 
-      <main className="max-w-7xl mx-auto pt-10 pb-20 px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow max-w-7xl mx-auto pt-10 pb-20 px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <section id="hero" className="pt-6 pb-10 text-center">
           <p className="text-xl sm:text-2xl font-medium font-heading" style={{ color: "var(--soft-brown)" }}>
@@ -167,6 +168,9 @@ export default function Home() {
           </a>
         </section>
       </main>
+
+      {/* Footer Section */}
+      <Footer />
 
       {/* Product Modal */}
       {selectedProduct && (
