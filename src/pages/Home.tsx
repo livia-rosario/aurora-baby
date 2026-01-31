@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductModal } from "@/components/ProductModal";
 import { Button } from "@/components/ui/button";
+import InstagramFeed from "@/components/InstagramFeed";
 import { Instagram, Phone, Wallet, Clock, Truck, CreditCard } from "lucide-react";
 import products from "@/data/products.json";
 
@@ -56,7 +57,7 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Instagram Button */}
+          {/* Instagram Section */}
           <div className="text-center">
             <a
               href="https://instagram.com/aurorababyloja"
@@ -68,6 +69,9 @@ export default function Home() {
               <Instagram className="w-5 h-5" />
               <span>Ver Modelos no Instagram</span>
             </a>
+            
+            {/* Simulated Instagram Feed */}
+            <InstagramFeed />
           </div>
         </section>
 
