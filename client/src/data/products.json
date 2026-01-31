@@ -8,14 +8,12 @@
     "specs": [
       "3 peças: lençol de cima com vira, lençol com elástico e fronha",
       "100% algodão",
-      "Tecido duplo e respirável",
-      "Acabamento que evita desfiar",
-      "Medidas: 70cm x 140cm"
+      "Toque macio e confortável"
     ],
     "images": {
-      "main": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop",
+      "main": "/images/products/jogo-tamanho.png",
       "gallery": [
-        "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop"
+        "/images/products/jogo.png"
       ]
     },
     "whatsappMessage": "Olá! Gostaria de pedir o Jogo de Lençol (R$ 189,00). Qual seria o prazo de entrega?"
@@ -120,7 +118,7 @@
     "images": {
       "main": "/images/products/capuz-tamanho.png",
       "gallery": [
-        "/images/products/capuz-tamanho.png"
+        "/images/products/capuz.png"
       ]
     },
     "whatsappMessage": "Olá! Gostaria de pedir a Toalha com Capuz (R$ 118,00). Qual seria o prazo de entrega?"
@@ -135,13 +133,12 @@
       "100% algodão",
       "Tecido duplo e respirável",
       "Muito macio ao toque",
-      "Acabamento que evita desfiar",
       "Medidas: 95cm x 95cm"
     ],
     "images": {
-      "main": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop",
+      "main": "/images/products/manta.png",
       "gallery": [
-        "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop"
+        "/images/products/manta1.png"
       ]
     },
     "whatsappMessage": "Olá! Gostaria de pedir a Manta (R$ 118,00). Qual seria o prazo de entrega?"
@@ -153,16 +150,13 @@
     "category": "Acessórios",
     "description": "Saquinho prático para guardar os pertences do bebê. Perfeito para levar na maternidade ou em passeios. Tecido resistente e fácil de limpar.",
     "specs": [
-      "100% algodão",
-      "Tecido duplo e respirável",
-      "Com alças para carregar",
-      "Acabamento que evita desfiar",
-      "Medidas: 30cm x 40cm"
+      "Com zíper resistente",
+      "Acabamento em tecido"
     ],
     "images": {
-      "main": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop",
+      "main": "/images/products/saquinho.png",
       "gallery": [
-        "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop"
+        "/images/products/saquinho2.png"
       ]
     },
     "whatsappMessage": "Olá! Gostaria de pedir o Saquinho de Maternidade (R$ 35,00). Qual seria o prazo de entrega?"
@@ -179,9 +173,9 @@
       "Medidas: 30cm x 45cm"
     ],
     "images": {
-      "main": "/images/products/toalha-mao-tamanho.png",
+      "main": "/images/products/toalha-de-mao.png",
       "gallery": [
-        "/images/products/toalha-mao-tamanho.png"
+        "/images/products/toalha-de-mao-2.png"
       ]
     },
     "whatsappMessage": "Olá! Gostaria de pedir a Toalha de Mão (R$ 45,00). Qual seria o prazo de entrega?"
