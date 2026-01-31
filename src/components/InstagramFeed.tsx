@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const INSTAGRAM_URL = "https://www.instagram.com/aurorababyboutique_/"; // Substitua pelo seu usuário real
+const INSTAGRAM_URL = "https://www.instagram.com/aurorababyloja";
 
 const IMAGES = Array.from({ length: 15 }, (_, i) => `/images/instagram/ig-${i + 1}.png`);
 
