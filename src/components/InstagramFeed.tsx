@@ -11,7 +11,7 @@ const InstagramFeed: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 4 >= IMAGES.length ? 0 : prev + 4));
-    }, 4000);
+    }, 8000);
 
     return () => clearInterval(interval);
   }, []);
