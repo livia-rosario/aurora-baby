@@ -39,10 +39,24 @@ export default function Admin() {
     }
     if (savedToken) {
       setGithubToken(savedToken);
+      loadLogs(savedToken);
     }
-    // Tentar carregar logs (no futuro virão do GitHub também)
-    fetch("/src/data/activity_logs.json").then(res => res.json()).then(data => setLogs(data)).catch(() => setLogs([]));
   }, []);
+
+  const loadLogs = async (token: string) => {
+    try {
+      const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${LOG_PATH}`, {
+        headers: { Authorization: `token ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const content = JSON.parse(atob(data.content));
+        setLogs(Array.isArray(content) ? content : []);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar logs:", err);
+    }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +66,7 @@ export default function Admin() {
       setCurrentUser(user.name);
       sessionStorage.setItem("admin_user", user.name);
       setError("");
+      if (githubToken) loadLogs(githubToken);
     } else {
       setError("Usuário ou senha incorretos.");
     }
@@ -64,6 +79,7 @@ export default function Admin() {
 
   const handleSaveToken = () => {
     localStorage.setItem("gh_token", githubToken);
+    loadLogs(githubToken);
     alert("Chave de acesso salva!");
   };
 
@@ -78,28 +94,51 @@ export default function Admin() {
       const updatedProducts = products.map(p => p.id === editingProduct.id ? editingProduct : p);
       
       // 1. Buscar SHA do arquivo de produtos
-      const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
+      const resProd = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
         headers: { Authorization: `token ${githubToken}` }
       });
-      const fileData = await res.json();
+      const fileProdData = await resProd.json();
 
-      // 2. Criar novo Log
+      // 2. Buscar SHA e conteúdo atual do arquivo de logs
+      const resLog = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${LOG_PATH}`, {
+        headers: { Authorization: `token ${githubToken}` }
+      });
+      let currentLogs = [];
+      let logSha = null;
+      if (resLog.ok) {
+        const logData = await resLog.json();
+        currentLogs = JSON.parse(atob(logData.content));
+        logSha = logData.sha;
+      }
+
+      // 3. Criar novo Log
       const newLog = {
         user: currentUser,
         action: `Alterou ${editingProduct.name}`,
         details: `Preço: R$ ${editingProduct.price}`,
         date: new Date().toLocaleString('pt-BR')
       };
-      const updatedLogs = [newLog, ...logs].slice(0, 50); // Mantém os últimos 50
+      const updatedLogs = [newLog, ...currentLogs].slice(0, 50);
 
-      // 3. Commit do JSON de produtos
+      // 4. Commit do JSON de produtos
       await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
         method: "PUT",
         headers: { Authorization: `token ${githubToken}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           message: `Update: ${editingProduct.name} by ${currentUser}`,
           content: btoa(JSON.stringify(updatedProducts, null, 2)),
-          sha: fileData.sha,
+          sha: fileProdData.sha,
+        }),
+      });
+
+      // 5. Commit do JSON de logs
+      await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${LOG_PATH}`, {
+        method: "PUT",
+        headers: { Authorization: `token ${githubToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: `Log: Activity by ${currentUser}`,
+          content: btoa(JSON.stringify(updatedLogs, null, 2)),
+          sha: logSha,
         }),
       });
 
@@ -141,7 +180,6 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-[#fdf8f3] flex flex-col">
-      {/* Header Mobile-Friendly */}
       <header className="bg-white border-b px-4 py-3 flex justify-between items-center sticky top-0 z-40 shadow-sm">
         <img src="/images/logo.png" alt="Aurora Baby" className="h-8" />
         <div className="flex items-center gap-2">
@@ -151,7 +189,6 @@ export default function Admin() {
       </header>
 
       <main className="flex-grow max-w-3xl mx-auto w-full p-4 pb-32">
-        {/* Navegação por abas otimizada para toque */}
         <div className="flex bg-white rounded-2xl p-1 mb-6 shadow-sm border border-[#e5d5c5]">
           <button onClick={() => setActiveTab("products")} className={`flex-1 flex items-center justify-center py-3 rounded-xl transition-all ${activeTab === 'products' ? 'bg-[#a5daeb] text-[#524330] font-bold shadow-inner' : 'text-gray-400'}`}>
             <LayoutDashboard className="w-5 h-5 mr-2" /> <span className="text-sm">Produtos</span>
@@ -216,7 +253,6 @@ export default function Admin() {
         )}
       </main>
 
-      {/* Modal de Edição Mobile-First (Full Screen no Mobile) */}
       {editingProduct && (
         <div className="fixed inset-0 bg-white sm:bg-black/50 flex items-end sm:items-center justify-center z-50 overflow-hidden">
           <Card className="w-full max-w-2xl h-[92vh] sm:h-auto sm:max-h-[90vh] overflow-y-auto border-none rounded-t-[32px] sm:rounded-3xl shadow-2xl flex flex-col">
@@ -247,7 +283,7 @@ export default function Admin() {
             <div className="p-6 bg-gray-50 border-t flex flex-col gap-3">
               <Button onClick={handleSaveProduct} disabled={isSaving} className="w-full bg-[#a5daeb] hover:bg-[#8ecce0] text-[#524330] font-bold h-16 rounded-2xl text-lg shadow-lg">
                 {isSaving ? <Loader2 className="w-6 h-6 animate-spin mr-2" /> : <Save className="w-6 h-6 mr-2" />}
-                Salvar Alterações
+                Salvar no GitHub
               </Button>
               <Button variant="ghost" onClick={() => setEditingProduct(null)} className="w-full h-12 text-gray-400 font-medium">Cancelar e Voltar</Button>
             </div>
