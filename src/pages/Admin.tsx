@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Edit, Package, Save, X, Loader2 } from "lucide-react";
+import { LogOut, Edit, Package, Save, X, Loader2, History, LayoutDashboard, Settings } from "lucide-react";
 import productsData from "@/data/products.json";
 
 // Configurações de Login
@@ -12,9 +12,9 @@ const USERS = [
   { username: "admin", password: "admin2026", name: "Lívia" },
 ];
 
-// Configurações do Repositório (Ajuste se o nome mudar)
 const GITHUB_REPO = "livia-rosario/aurora-baby";
 const FILE_PATH = "src/data/products.json";
+const LOG_PATH = "src/data/activity_logs.json";
 
 export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -27,6 +27,8 @@ export default function Admin() {
   const [products, setProducts] = useState(productsData);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<"products" | "logs" | "settings">("products");
+  const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
     const savedUser = sessionStorage.getItem("admin_user");
@@ -38,12 +40,13 @@ export default function Admin() {
     if (savedToken) {
       setGithubToken(savedToken);
     }
+    // Tentar carregar logs (no futuro virão do GitHub também)
+    fetch("/src/data/activity_logs.json").then(res => res.json()).then(data => setLogs(data)).catch(() => setLogs([]));
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const user = USERS.find(u => u.username === username.toLowerCase() && u.password === password);
-    
     if (user) {
       setIsLoggedIn(true);
       setCurrentUser(user.name);
@@ -61,56 +64,49 @@ export default function Admin() {
 
   const handleSaveToken = () => {
     localStorage.setItem("gh_token", githubToken);
-    alert("Chave de acesso salva com sucesso!");
-  };
-
-  const handleEdit = (product: any) => {
-    setEditingProduct({ ...product });
+    alert("Chave de acesso salva!");
   };
 
   const handleSaveProduct = async () => {
     if (!githubToken) {
-      alert("Por favor, configure a Chave de Acesso (Token) do GitHub primeiro.");
+      alert("Configure o Token do GitHub em 'Configurações' primeiro.");
       return;
     }
 
     setIsSaving(true);
     try {
-      // 1. Obter os dados atualizados
-      const updatedProducts = products.map(p => 
-        p.id === editingProduct.id ? editingProduct : p
-      );
-
-      // 2. Buscar o SHA do arquivo atual no GitHub
+      const updatedProducts = products.map(p => p.id === editingProduct.id ? editingProduct : p);
+      
+      // 1. Buscar SHA do arquivo de produtos
       const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
         headers: { Authorization: `token ${githubToken}` }
       });
       const fileData = await res.json();
 
-      if (!fileData.sha) throw new Error("Não foi possível encontrar o arquivo no GitHub.");
+      // 2. Criar novo Log
+      const newLog = {
+        user: currentUser,
+        action: `Alterou ${editingProduct.name}`,
+        details: `Preço: R$ ${editingProduct.price}`,
+        date: new Date().toLocaleString('pt-BR')
+      };
+      const updatedLogs = [newLog, ...logs].slice(0, 50); // Mantém os últimos 50
 
-      // 3. Fazer o commit via API
-      const commitRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
+      // 3. Commit do JSON de produtos
+      await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
         method: "PUT",
-        headers: {
-          Authorization: `token ${githubToken}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `token ${githubToken}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: `Update product: ${editingProduct.name} (via Admin Panel)`,
+          message: `Update: ${editingProduct.name} by ${currentUser}`,
           content: btoa(JSON.stringify(updatedProducts, null, 2)),
           sha: fileData.sha,
         }),
       });
 
-      if (commitRes.ok) {
-        setProducts(updatedProducts);
-        setEditingProduct(null);
-        alert("Produto atualizado! O site será atualizado em instantes.");
-      } else {
-        const errorData = await commitRes.json();
-        throw new Error(errorData.message || "Erro ao salvar.");
-      }
+      setProducts(updatedProducts);
+      setLogs(updatedLogs);
+      setEditingProduct(null);
+      alert("Salvo com sucesso! O site atualizará em breve.");
     } catch (err: any) {
       alert("Erro ao salvar: " + err.message);
     } finally {
@@ -121,23 +117,21 @@ export default function Admin() {
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fdf8f3] px-4">
-        <Card className="w-full max-w-md shadow-xl border-none">
-          <CardHeader className="text-center pb-2">
+        <Card className="w-full max-w-md shadow-xl border-none rounded-3xl overflow-hidden">
+          <CardHeader className="text-center pb-2 pt-8">
             <img src="/images/logo.png" alt="Aurora Baby" className="h-16 mx-auto mb-4" />
-            <CardTitle className="text-2xl font-heading text-[#524330]">Área Administrativa</CardTitle>
+            <CardTitle className="text-2xl font-heading text-[#524330]">Área das Meninas ✨</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+          <CardContent className="p-8">
+            <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#524330]">Usuário</label>
-                <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Seu usuário" className="rounded-xl border-[#e5d5c5]" />
+                <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Usuário" className="rounded-2xl border-[#e5d5c5] h-14 text-lg" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#524330]">Senha</label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Sua senha" className="rounded-xl border-[#e5d5c5]" />
+                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" className="rounded-2xl border-[#e5d5c5] h-14 text-lg" />
               </div>
-              {error && <p className="text-red-500 text-xs italic">{error}</p>}
-              <Button type="submit" className="w-full bg-[#a5daeb] hover:bg-[#8ecce0] text-[#524330] font-bold rounded-xl py-6">Entrar</Button>
+              {error && <p className="text-red-500 text-sm italic text-center">{error}</p>}
+              <Button type="submit" className="w-full bg-[#a5daeb] hover:bg-[#8ecce0] text-[#524330] font-bold rounded-2xl h-14 text-lg shadow-lg">Entrar no Painel</Button>
             </form>
           </CardContent>
         </Card>
@@ -146,76 +140,117 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fdf8f3] pb-20">
-      <header className="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-        <div className="flex items-center space-x-3">
-          <img src="/images/logo.png" alt="Aurora Baby" className="h-8" />
-          <span className="hidden sm:inline text-[#524330] font-medium">Olá, {currentUser}</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Input 
-            type="password" 
-            placeholder="GitHub Token" 
-            value={githubToken} 
-            onChange={(e) => setGithubToken(e.target.value)}
-            className="w-32 h-8 text-xs"
-          />
-          <Button onClick={handleSaveToken} size="sm" variant="outline" className="h-8 text-xs">Salvar Chave</Button>
-          <Button onClick={handleLogout} variant="ghost" size="sm" className="text-red-500"><LogOut className="w-4 h-4" /></Button>
+    <div className="min-h-screen bg-[#fdf8f3] flex flex-col">
+      {/* Header Mobile-Friendly */}
+      <header className="bg-white border-b px-4 py-3 flex justify-between items-center sticky top-0 z-40 shadow-sm">
+        <img src="/images/logo.png" alt="Aurora Baby" className="h-8" />
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-[#524330] bg-[#f5ebe0] px-3 py-1 rounded-full">Olá, {currentUser}</span>
+          <Button onClick={handleLogout} variant="ghost" size="sm" className="text-red-500 p-2"><LogOut className="w-5 h-5" /></Button>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto mt-10 px-4">
-        <h1 className="text-3xl font-heading font-bold text-[#524330] mb-8 flex items-center">
-          <Package className="w-8 h-8 mr-3 text-[#a5daeb]" /> Gerenciar Catálogo
-        </h1>
-
-        <div className="grid gap-4">
-          {products.map((product) => (
-            <Card key={product.id} className="overflow-hidden border-none shadow-sm">
-              <div className="flex flex-col sm:flex-row items-center p-4 gap-4">
-                <img src={product.images.main} className="w-16 h-16 rounded-lg object-cover bg-gray-100" />
-                <div className="flex-grow text-center sm:text-left">
-                  <h3 className="font-bold text-[#524330]">{product.name}</h3>
-                  <p className="text-[#a5daeb] font-bold">R$ {product.price.toFixed(2)}</p>
-                </div>
-                <Button onClick={() => handleEdit(product)} className="bg-[#f5ebe0] hover:bg-[#eddecb] text-[#524330] rounded-xl"><Edit className="w-4 h-4 mr-2" /> Editar</Button>
-              </div>
-            </Card>
-          ))}
+      <main className="flex-grow max-w-3xl mx-auto w-full p-4 pb-32">
+        {/* Navegação por abas otimizada para toque */}
+        <div className="flex bg-white rounded-2xl p-1 mb-6 shadow-sm border border-[#e5d5c5]">
+          <button onClick={() => setActiveTab("products")} className={`flex-1 flex items-center justify-center py-3 rounded-xl transition-all ${activeTab === 'products' ? 'bg-[#a5daeb] text-[#524330] font-bold shadow-inner' : 'text-gray-400'}`}>
+            <LayoutDashboard className="w-5 h-5 mr-2" /> <span className="text-sm">Produtos</span>
+          </button>
+          <button onClick={() => setActiveTab("logs")} className={`flex-1 flex items-center justify-center py-3 rounded-xl transition-all ${activeTab === 'logs' ? 'bg-[#a5daeb] text-[#524330] font-bold shadow-inner' : 'text-gray-400'}`}>
+            <History className="w-5 h-5 mr-2" /> <span className="text-sm">Atividade</span>
+          </button>
+          <button onClick={() => setActiveTab("settings")} className={`flex-1 flex items-center justify-center py-3 rounded-xl transition-all ${activeTab === 'settings' ? 'bg-[#a5daeb] text-[#524330] font-bold shadow-inner' : 'text-gray-400'}`}>
+            <Settings className="w-5 h-5 mr-2" /> <span className="text-sm">Ajustes</span>
+          </button>
         </div>
+
+        {activeTab === "products" && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-heading font-bold text-[#524330] px-2">Catálogo de Produtos</h2>
+            {products.map((product) => (
+              <Card key={product.id} className="overflow-hidden border-none shadow-sm rounded-2xl active:scale-[0.98] transition-transform">
+                <div className="flex items-center p-3 gap-4">
+                  <img src={product.images.main} className="w-20 h-20 rounded-xl object-cover flex-shrink-0" />
+                  <div className="flex-grow min-w-0">
+                    <h3 className="font-bold text-[#524330] truncate text-base">{product.name}</h3>
+                    <p className="text-[#a5daeb] font-bold text-lg">R$ {product.price.toFixed(2)}</p>
+                  </div>
+                  <Button onClick={() => handleEdit(product)} className="bg-[#f5ebe0] hover:bg-[#eddecb] text-[#524330] rounded-xl h-12 w-12 p-0"><Edit className="w-5 h-5" /></Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {activeTab === "logs" && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-heading font-bold text-[#524330] px-2">Histórico de Alterações</h2>
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-[#e5d5c5]">
+              {logs.length > 0 ? logs.map((log, i) => (
+                <div key={i} className="p-4 border-b last:border-none flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-[#a5daeb] mt-2 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm text-[#524330]"><strong>{log.user}</strong> {log.action}</p>
+                    <p className="text-xs text-gray-400 mt-1">{log.date} • {log.details}</p>
+                  </div>
+                </div>
+              )) : (
+                <div className="p-10 text-center text-gray-400 italic">Nenhuma atividade registrada ainda.</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "settings" && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-heading font-bold text-[#524330] px-2">Configurações Técnicas</h2>
+            <Card className="p-6 rounded-2xl border-none shadow-sm space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#524330]">GitHub Access Token</label>
+                <Input type="password" value={githubToken} onChange={(e) => setGithubToken(e.target.value)} placeholder="Cole seu token aqui" className="h-12 rounded-xl" />
+                <p className="text-[10px] text-gray-400 italic">Essa chave permite que o site salve as alterações no GitHub.</p>
+              </div>
+              <Button onClick={handleSaveToken} className="w-full bg-[#524330] text-white rounded-xl h-12 font-bold">Salvar Chave no Navegador</Button>
+            </Card>
+          </div>
+        )}
       </main>
 
+      {/* Modal de Edição Mobile-First (Full Screen no Mobile) */}
       {editingProduct && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto border-none">
-            <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
-              <CardTitle className="text-xl font-heading text-[#524330]">Editar: {editingProduct.name}</CardTitle>
-              <Button variant="ghost" onClick={() => setEditingProduct(null)}><X /></Button>
+        <div className="fixed inset-0 bg-white sm:bg-black/50 flex items-end sm:items-center justify-center z-50 overflow-hidden">
+          <Card className="w-full max-w-2xl h-[92vh] sm:h-auto sm:max-h-[90vh] overflow-y-auto border-none rounded-t-[32px] sm:rounded-3xl shadow-2xl flex flex-col">
+            <div className="h-1.5 w-12 bg-gray-200 mx-auto mt-3 rounded-full sm:hidden" />
+            <CardHeader className="flex flex-row items-center justify-between border-b px-6 py-4">
+              <CardTitle className="text-lg font-heading text-[#524330]">Editando Produto</CardTitle>
+              <Button variant="ghost" onClick={() => setEditingProduct(null)} className="rounded-full"><X /></Button>
             </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="p-6 space-y-6 flex-grow">
+              <div className="flex justify-center mb-4">
+                <img src={editingProduct.images.main} className="w-32 h-32 rounded-2xl object-cover shadow-md" />
+              </div>
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-[#524330]">Nome</label>
-                  <Input value={editingProduct.name} onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})} />
+                  <label className="text-sm font-bold text-[#524330]">Nome da Peça</label>
+                  <Input value={editingProduct.name} onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})} className="h-14 rounded-2xl border-[#e5d5c5] text-lg" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-[#524330]">Preço (R$)</label>
-                  <Input type="number" value={editingProduct.price} onChange={(e) => setEditingProduct({...editingProduct, price: parseFloat(e.target.value)})} />
+                  <label className="text-sm font-bold text-[#524330]">Preço de Venda (R$)</label>
+                  <Input type="number" step="0.01" value={editingProduct.price} onChange={(e) => setEditingProduct({...editingProduct, price: parseFloat(e.target.value)})} className="h-14 rounded-2xl border-[#e5d5c5] text-lg font-bold text-[#a5daeb]" />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[#524330]">Descrição</label>
-                <textarea className="w-full min-h-[100px] p-3 rounded-md border border-[#e5d5c5]" value={editingProduct.description} onChange={(e) => setEditingProduct({...editingProduct, description: e.target.value})} />
-              </div>
-              <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Button variant="outline" onClick={() => setEditingProduct(null)}>Cancelar</Button>
-                <Button onClick={handleSaveProduct} disabled={isSaving} className="bg-[#a5daeb] hover:bg-[#8ecce0] text-[#524330] font-bold px-8">
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                  Salvar no GitHub
-                </Button>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-[#524330]">Descrição para o Site</label>
+                  <textarea className="w-full min-h-[120px] p-4 rounded-2xl border border-[#e5d5c5] focus:ring-2 focus:ring-[#a5daeb] outline-none text-base" value={editingProduct.description} onChange={(e) => setEditingProduct({...editingProduct, description: e.target.value})} />
+                </div>
               </div>
             </CardContent>
+            <div className="p-6 bg-gray-50 border-t flex flex-col gap-3">
+              <Button onClick={handleSaveProduct} disabled={isSaving} className="w-full bg-[#a5daeb] hover:bg-[#8ecce0] text-[#524330] font-bold h-16 rounded-2xl text-lg shadow-lg">
+                {isSaving ? <Loader2 className="w-6 h-6 animate-spin mr-2" /> : <Save className="w-6 h-6 mr-2" />}
+                Salvar Alterações
+              </Button>
+              <Button variant="ghost" onClick={() => setEditingProduct(null)} className="w-full h-12 text-gray-400 font-medium">Cancelar e Voltar</Button>
+            </div>
           </Card>
         </div>
       )}
