@@ -83,6 +83,11 @@ export default function Admin() {
     alert("Chave de acesso salva!");
   };
 
+  const handleEdit = (product: any) => {
+    console.log("Editando produto:", product);
+    setEditingProduct({ ...product });
+  };
+
   const handleSaveProduct = async () => {
     if (!githubToken) {
       alert("Configure o Token do GitHub em 'Configurações' primeiro.");
@@ -93,13 +98,11 @@ export default function Admin() {
     try {
       const updatedProducts = products.map(p => p.id === editingProduct.id ? editingProduct : p);
       
-      // 1. Buscar SHA do arquivo de produtos
       const resProd = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
         headers: { Authorization: `token ${githubToken}` }
       });
       const fileProdData = await resProd.json();
 
-      // 2. Buscar SHA e conteúdo atual do arquivo de logs
       const resLog = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${LOG_PATH}`, {
         headers: { Authorization: `token ${githubToken}` }
       });
@@ -111,7 +114,6 @@ export default function Admin() {
         logSha = logData.sha;
       }
 
-      // 3. Criar novo Log
       const newLog = {
         user: currentUser,
         action: `Alterou ${editingProduct.name}`,
@@ -120,24 +122,22 @@ export default function Admin() {
       };
       const updatedLogs = [newLog, ...currentLogs].slice(0, 50);
 
-      // 4. Commit do JSON de produtos
       await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
         method: "PUT",
         headers: { Authorization: `token ${githubToken}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           message: `Update: ${editingProduct.name} by ${currentUser}`,
-          content: btoa(JSON.stringify(updatedProducts, null, 2)),
+          content: btoa(unescape(encodeURIComponent(JSON.stringify(updatedProducts, null, 2)))),
           sha: fileProdData.sha,
         }),
       });
 
-      // 5. Commit do JSON de logs
       await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${LOG_PATH}`, {
         method: "PUT",
         headers: { Authorization: `token ${githubToken}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           message: `Log: Activity by ${currentUser}`,
-          content: btoa(JSON.stringify(updatedLogs, null, 2)),
+          content: btoa(unescape(encodeURIComponent(JSON.stringify(updatedLogs, null, 2)))),
           sha: logSha,
         }),
       });
@@ -212,7 +212,15 @@ export default function Admin() {
                     <h3 className="font-bold text-[#524330] truncate text-base">{product.name}</h3>
                     <p className="text-[#a5daeb] font-bold text-lg">R$ {product.price.toFixed(2)}</p>
                   </div>
-                  <Button onClick={() => handleEdit(product)} className="bg-[#f5ebe0] hover:bg-[#eddecb] text-[#524330] rounded-xl h-12 w-12 p-0"><Edit className="w-5 h-5" /></Button>
+                  <Button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleEdit(product);
+                    }} 
+                    className="bg-[#f5ebe0] hover:bg-[#eddecb] text-[#524330] rounded-xl h-12 w-12 p-0 z-10 relative"
+                  >
+                    <Edit className="w-5 h-5" />
+                  </Button>
                 </div>
               </Card>
             ))}
@@ -254,7 +262,7 @@ export default function Admin() {
       </main>
 
       {editingProduct && (
-        <div className="fixed inset-0 bg-white sm:bg-black/50 flex items-end sm:items-center justify-center z-50 overflow-hidden">
+        <div className="fixed inset-0 bg-white sm:bg-black/50 flex items-end sm:items-center justify-center z-[100] overflow-hidden">
           <Card className="w-full max-w-2xl h-[92vh] sm:h-auto sm:max-h-[90vh] overflow-y-auto border-none rounded-t-[32px] sm:rounded-3xl shadow-2xl flex flex-col">
             <div className="h-1.5 w-12 bg-gray-200 mx-auto mt-3 rounded-full sm:hidden" />
             <CardHeader className="flex flex-row items-center justify-between border-b px-6 py-4">
