@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Edit, Package, Save, X, Loader2, History, LayoutDashboard, Settings } from "lucide-react";
+import { LogOut, Edit, Package, Save, X, Loader2, History, LayoutDashboard, Settings, Plus, Trash2 } from "lucide-react";
 import productsData from "@/data/products.json";
 
 // Configurações de Login
@@ -84,8 +84,22 @@ export default function Admin() {
   };
 
   const handleEdit = (product: any) => {
-    console.log("Editando produto:", product);
     setEditingProduct({ ...product });
+  };
+
+  const handleSpecChange = (index: number, value: string) => {
+    const newSpecs = [...editingProduct.specs];
+    newSpecs[index] = value;
+    setEditingProduct({ ...editingProduct, specs: newSpecs });
+  };
+
+  const addSpec = () => {
+    setEditingProduct({ ...editingProduct, specs: [...editingProduct.specs, ""] });
+  };
+
+  const removeSpec = (index: number) => {
+    const newSpecs = editingProduct.specs.filter((_: any, i: number) => i !== index);
+    setEditingProduct({ ...editingProduct, specs: newSpecs });
   };
 
   const handleSaveProduct = async () => {
@@ -284,7 +298,37 @@ export default function Admin() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-[#524330]">Descrição para o Site</label>
-                  <textarea className="w-full min-h-[120px] p-4 rounded-2xl border border-[#e5d5c5] focus:ring-2 focus:ring-[#a5daeb] outline-none text-base" value={editingProduct.description} onChange={(e) => setEditingProduct({...editingProduct, description: e.target.value})} />
+                  <textarea className="w-full min-h-[100px] p-4 rounded-2xl border border-[#e5d5c5] focus:ring-2 focus:ring-[#a5daeb] outline-none text-base" value={editingProduct.description} onChange={(e) => setEditingProduct({...editingProduct, description: e.target.value})} />
+                </div>
+                
+                {/* Edição de Especificações (Lista) */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-bold text-[#524330]">Especificações (Lista)</label>
+                    <Button onClick={addSpec} variant="outline" size="sm" className="rounded-full h-8 px-3 text-xs border-[#a5daeb] text-[#524330]">
+                      <Plus className="w-3 h-3 mr-1" /> Adicionar
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {editingProduct.specs.map((spec: string, index: number) => (
+                      <div key={index} className="flex gap-2">
+                        <Input 
+                          value={spec} 
+                          onChange={(e) => handleSpecChange(index, e.target.value)} 
+                          className="h-10 rounded-xl border-[#e5d5c5] text-sm"
+                          placeholder="Ex: 100% Algodão"
+                        />
+                        <Button 
+                          onClick={() => removeSpec(index)} 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-red-400 hover:text-red-600 p-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </CardContent>
