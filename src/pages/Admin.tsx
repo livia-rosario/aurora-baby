@@ -7,7 +7,7 @@ import productsData from "@/data/products.json";
 
 // Configurações de Login
 const USERS = [
-  { username: "miriam", password: "miriam1965", name: "Miriam" },
+  { username: "miriam", password: "miriam2026", name: "Miriam" },
   { username: "denize", password: "denize1961", name: "Denize" },
   { username: "admin", password: "admin2026", name: "Lívia" },
 ];
