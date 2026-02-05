@@ -15,6 +15,8 @@ const USERS = [
 const GITHUB_REPO = "livia-rosario/aurora-baby";
 const FILE_PATH = "src/data/products.json";
 const LOG_PATH = "src/data/activity_logs.json";
+// Token integrado para tornar o processo invisível
+const GITHUB_TOKEN = "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";
 
 export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -22,35 +24,30 @@ export default function Admin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [currentUser, setCurrentUser] = useState("");
-  const [githubToken, setGithubToken] = useState("");
   
   const [products, setProducts] = useState(productsData);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"products" | "logs" | "settings">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "logs">("products");
   const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
     const savedUser = sessionStorage.getItem("admin_user");
-    const savedToken = localStorage.getItem("gh_token");
     if (savedUser) {
       setIsLoggedIn(true);
       setCurrentUser(savedUser);
-    }
-    if (savedToken) {
-      setGithubToken(savedToken);
-      loadLogs(savedToken);
+      loadLogs();
     }
   }, []);
 
-  const loadLogs = async (token: string) => {
+  const loadLogs = async () => {
     try {
       const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${LOG_PATH}`, {
-        headers: { Authorization: `token ${token}` }
+        headers: { Authorization: `token ${GITHUB_TOKEN}` }
       });
       if (res.ok) {
         const data = await res.json();
-        const content = JSON.parse(atob(data.content));
+        const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
         setLogs(Array.isArray(content) ? content : []);
       }
     } catch (err) {
@@ -66,7 +63,7 @@ export default function Admin() {
       setCurrentUser(user.name);
       sessionStorage.setItem("admin_user", user.name);
       setError("");
-      if (githubToken) loadLogs(githubToken);
+      loadLogs();
     } else {
       setError("Usuário ou senha incorretos.");
     }
@@ -75,12 +72,6 @@ export default function Admin() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     sessionStorage.removeItem("admin_user");
-  };
-
-  const handleSaveToken = () => {
-    localStorage.setItem("gh_token", githubToken);
-    loadLogs(githubToken);
-    alert("Chave de acesso salva!");
   };
 
   const handleEdit = (product: any) => {
@@ -103,28 +94,23 @@ export default function Admin() {
   };
 
   const handleSaveProduct = async () => {
-    if (!githubToken) {
-      alert("Configure o Token do GitHub em 'Configurações' primeiro.");
-      return;
-    }
-
     setIsSaving(true);
     try {
       const updatedProducts = products.map(p => p.id === editingProduct.id ? editingProduct : p);
       
       const resProd = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
-        headers: { Authorization: `token ${githubToken}` }
+        headers: { Authorization: `token ${GITHUB_TOKEN}` }
       });
       const fileProdData = await resProd.json();
 
       const resLog = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${LOG_PATH}`, {
-        headers: { Authorization: `token ${githubToken}` }
+        headers: { Authorization: `token ${GITHUB_TOKEN}` }
       });
       let currentLogs = [];
       let logSha = null;
       if (resLog.ok) {
         const logData = await resLog.json();
-        currentLogs = JSON.parse(atob(logData.content));
+        currentLogs = JSON.parse(decodeURIComponent(escape(atob(logData.content))));
         logSha = logData.sha;
       }
 
@@ -138,7 +124,7 @@ export default function Admin() {
 
       await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
         method: "PUT",
-        headers: { Authorization: `token ${githubToken}`, "Content-Type": "application/json" },
+        headers: { Authorization: `token ${GITHUB_TOKEN}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           message: `Update: ${editingProduct.name} by ${currentUser}`,
           content: btoa(unescape(encodeURIComponent(JSON.stringify(updatedProducts, null, 2)))),
@@ -148,7 +134,7 @@ export default function Admin() {
 
       await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${LOG_PATH}`, {
         method: "PUT",
-        headers: { Authorization: `token ${githubToken}`, "Content-Type": "application/json" },
+        headers: { Authorization: `token ${GITHUB_TOKEN}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           message: `Log: Activity by ${currentUser}`,
           content: btoa(unescape(encodeURIComponent(JSON.stringify(updatedLogs, null, 2)))),
@@ -210,9 +196,6 @@ export default function Admin() {
           <button onClick={() => setActiveTab("logs")} className={`flex-1 flex items-center justify-center py-3 rounded-xl transition-all ${activeTab === 'logs' ? 'bg-[#a5daeb] text-[#524330] font-bold shadow-inner' : 'text-gray-400'}`}>
             <History className="w-5 h-5 mr-2" /> <span className="text-sm">Atividade</span>
           </button>
-          <button onClick={() => setActiveTab("settings")} className={`flex-1 flex items-center justify-center py-3 rounded-xl transition-all ${activeTab === 'settings' ? 'bg-[#a5daeb] text-[#524330] font-bold shadow-inner' : 'text-gray-400'}`}>
-            <Settings className="w-5 h-5 mr-2" /> <span className="text-sm">Ajustes</span>
-          </button>
         </div>
 
         {activeTab === "products" && (
@@ -257,20 +240,6 @@ export default function Admin() {
                 <div className="p-10 text-center text-gray-400 italic">Nenhuma atividade registrada ainda.</div>
               )}
             </div>
-          </div>
-        )}
-
-        {activeTab === "settings" && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-heading font-bold text-[#524330] px-2">Configurações Técnicas</h2>
-            <Card className="p-6 rounded-2xl border-none shadow-sm space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[#524330]">GitHub Access Token</label>
-                <Input type="password" value={githubToken} onChange={(e) => setGithubToken(e.target.value)} placeholder="Cole seu token aqui" className="h-12 rounded-xl" />
-                <p className="text-[10px] text-gray-400 italic">Essa chave permite que o site salve as alterações no GitHub.</p>
-              </div>
-              <Button onClick={handleSaveToken} className="w-full bg-[#524330] text-white rounded-xl h-12 font-bold">Salvar Chave no Navegador</Button>
-            </Card>
           </div>
         )}
       </main>
@@ -345,4 +314,3 @@ export default function Admin() {
     </div>
   );
 }
-// Force redeploy: Thu Feb  5 15:24:07 EST 2026
