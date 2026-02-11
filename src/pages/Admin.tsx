@@ -2,21 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Edit, Package, Save, X, Loader2, History, LayoutDashboard, Settings, Plus, Trash2 } from "lucide-react";
-import productsData from "@/data/products.json";
+import { LogOut, Edit, Save, X, Loader2, History, LayoutDashboard, Plus, Trash2, Database } from "lucide-react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import initialProducts from "../data/products.json";
 
-// Configurações de Login
 const USERS = [
-  { username: "miriam", password: "miriam2026", name: "Miriam" },
+  { username: "miriam", password: "miriam1965", name: "Miriam" },
   { username: "denize", password: "denize1961", name: "Denize" },
   { username: "admin", password: "admin2026", name: "Lívia" },
 ];
-
-const GITHUB_REPO = "livia-rosario/aurora-baby";
-const FILE_PATH = "src/data/products.json";
-const LOG_PATH = "src/data/activity_logs.json";
-// Token integrado para tornar o processo invisível
-const GITHUB_TOKEN = "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";
 
 export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -25,35 +20,23 @@ export default function Admin() {
   const [error, setError] = useState("");
   const [currentUser, setCurrentUser] = useState("");
   
-  const [products, setProducts] = useState(productsData);
+  const products = useQuery(api.aurora.getProducts);
+  const logs = useQuery(api.aurora.getLogs);
+  const updateProduct = useMutation(api.aurora.updateProduct);
+  const addLog = useMutation(api.aurora.addLog);
+  const seedProducts = useMutation(api.aurora.seedProducts);
+
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"products" | "logs">("products");
-  const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
     const savedUser = sessionStorage.getItem("admin_user");
     if (savedUser) {
       setIsLoggedIn(true);
       setCurrentUser(savedUser);
-      loadLogs();
     }
   }, []);
-
-  const loadLogs = async () => {
-    try {
-      const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${LOG_PATH}`, {
-        headers: { Authorization: `token ${GITHUB_TOKEN}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
-        setLogs(Array.isArray(content) ? content : []);
-      }
-    } catch (err) {
-      console.error("Erro ao carregar logs:", err);
-    }
-  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +46,6 @@ export default function Admin() {
       setCurrentUser(user.name);
       sessionStorage.setItem("admin_user", user.name);
       setError("");
-      loadLogs();
     } else {
       setError("Usuário ou senha incorretos.");
     }
@@ -72,6 +54,17 @@ export default function Admin() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     sessionStorage.removeItem("admin_user");
+  };
+
+  const handleSeed = async () => {
+    if (confirm("Deseja importar os produtos do arquivo JSON para o Banco de Dados?")) {
+      try {
+        await seedProducts({ items: initialProducts });
+        alert("Produtos importados com sucesso!");
+      } catch (err: any) {
+        alert("Erro na importação: " + err.message);
+      }
+    }
   };
 
   const handleEdit = (product: any) => {
@@ -96,56 +89,23 @@ export default function Admin() {
   const handleSaveProduct = async () => {
     setIsSaving(true);
     try {
-      const updatedProducts = products.map(p => p.id === editingProduct.id ? editingProduct : p);
-      
-      const resProd = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
-        headers: { Authorization: `token ${GITHUB_TOKEN}` }
+      await updateProduct({
+        id: editingProduct._id,
+        name: editingProduct.name,
+        price: editingProduct.price,
+        description: editingProduct.description,
+        specs: editingProduct.specs,
       });
-      const fileProdData = await resProd.json();
 
-      const resLog = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${LOG_PATH}`, {
-        headers: { Authorization: `token ${GITHUB_TOKEN}` }
-      });
-      let currentLogs = [];
-      let logSha = null;
-      if (resLog.ok) {
-        const logData = await resLog.json();
-        currentLogs = JSON.parse(decodeURIComponent(escape(atob(logData.content))));
-        logSha = logData.sha;
-      }
-
-      const newLog = {
+      await addLog({
         user: currentUser,
         action: `Alterou ${editingProduct.name}`,
         details: `Preço: R$ ${editingProduct.price}`,
         date: new Date().toLocaleString('pt-BR')
-      };
-      const updatedLogs = [newLog, ...currentLogs].slice(0, 50);
-
-      await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
-        method: "PUT",
-        headers: { Authorization: `token ${GITHUB_TOKEN}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: `Update: ${editingProduct.name} by ${currentUser}`,
-          content: btoa(unescape(encodeURIComponent(JSON.stringify(updatedProducts, null, 2)))),
-          sha: fileProdData.sha,
-        }),
       });
 
-      await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${LOG_PATH}`, {
-        method: "PUT",
-        headers: { Authorization: `token ${GITHUB_TOKEN}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: `Log: Activity by ${currentUser}`,
-          content: btoa(unescape(encodeURIComponent(JSON.stringify(updatedLogs, null, 2)))),
-          sha: logSha,
-        }),
-      });
-
-      setProducts(updatedProducts);
-      setLogs(updatedLogs);
       setEditingProduct(null);
-      alert("Salvo com sucesso! O site atualizará em breve.");
+      alert("Salvo com sucesso! A mudança é instantânea.");
     } catch (err: any) {
       alert("Erro ao salvar: " + err.message);
     } finally {
@@ -198,9 +158,21 @@ export default function Admin() {
           </button>
         </div>
 
-        {activeTab === "products" && (
+        {!products ? (
+          <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+            <Loader2 className="w-10 h-10 animate-spin mb-4 text-[#a5daeb]" />
+            <p className="animate-pulse">Sincronizando com o banco de dados...</p>
+          </div>
+        ) : activeTab === "products" ? (
           <div className="space-y-4">
-            <h2 className="text-xl font-heading font-bold text-[#524330] px-2">Catálogo de Produtos</h2>
+            <div className="flex justify-between items-center px-2">
+              <h2 className="text-xl font-heading font-bold text-[#524330]">Catálogo de Produtos</h2>
+              {products.length === 0 && (
+                <Button onClick={handleSeed} variant="outline" size="sm" className="rounded-full border-[#a5daeb] text-[#524330]">
+                  <Database className="w-4 h-4 mr-2" /> Importar Inicial
+                </Button>
+              )}
+            </div>
             {products.map((product) => (
               <Card key={product.id} className="overflow-hidden border-none shadow-sm rounded-2xl active:scale-[0.98] transition-transform">
                 <div className="flex items-center p-3 gap-4">
@@ -210,11 +182,8 @@ export default function Admin() {
                     <p className="text-[#a5daeb] font-bold text-lg">R$ {product.price.toFixed(2)}</p>
                   </div>
                   <Button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleEdit(product);
-                    }} 
-                    className="bg-[#f5ebe0] hover:bg-[#eddecb] text-[#524330] rounded-xl h-12 w-12 p-0 z-10 relative"
+                    onClick={() => handleEdit(product)} 
+                    className="bg-[#f5ebe0] hover:bg-[#eddecb] text-[#524330] rounded-xl h-12 w-12 p-0"
                   >
                     <Edit className="w-5 h-5" />
                   </Button>
@@ -222,13 +191,11 @@ export default function Admin() {
               </Card>
             ))}
           </div>
-        )}
-
-        {activeTab === "logs" && (
+        ) : (
           <div className="space-y-4">
             <h2 className="text-xl font-heading font-bold text-[#524330] px-2">Histórico de Alterações</h2>
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-[#e5d5c5]">
-              {logs.length > 0 ? logs.map((log, i) => (
+              {logs && logs.length > 0 ? logs.map((log: any, i: number) => (
                 <div key={i} className="p-4 border-b last:border-none flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full bg-[#a5daeb] mt-2 flex-shrink-0" />
                   <div>
@@ -270,7 +237,6 @@ export default function Admin() {
                   <textarea className="w-full min-h-[100px] p-4 rounded-2xl border border-[#e5d5c5] focus:ring-2 focus:ring-[#a5daeb] outline-none text-base" value={editingProduct.description} onChange={(e) => setEditingProduct({...editingProduct, description: e.target.value})} />
                 </div>
                 
-                {/* Edição de Especificações (Lista) */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <label className="text-sm font-bold text-[#524330]">Especificações (Lista)</label>
@@ -287,12 +253,7 @@ export default function Admin() {
                           className="h-10 rounded-xl border-[#e5d5c5] text-sm"
                           placeholder="Ex: 100% Algodão"
                         />
-                        <Button 
-                          onClick={() => removeSpec(index)} 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-red-400 hover:text-red-600 p-2"
-                        >
+                        <Button onClick={() => removeSpec(index)} variant="ghost" size="sm" className="text-red-400 hover:text-red-600 p-2">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -304,7 +265,7 @@ export default function Admin() {
             <div className="p-6 bg-gray-50 border-t flex flex-col gap-3">
               <Button onClick={handleSaveProduct} disabled={isSaving} className="w-full bg-[#a5daeb] hover:bg-[#8ecce0] text-[#524330] font-bold h-16 rounded-2xl text-lg shadow-lg">
                 {isSaving ? <Loader2 className="w-6 h-6 animate-spin mr-2" /> : <Save className="w-6 h-6 mr-2" />}
-                Salvar no GitHub
+                Salvar no Banco de Dados
               </Button>
               <Button variant="ghost" onClick={() => setEditingProduct(null)} className="w-full h-12 text-gray-400 font-medium">Cancelar e Voltar</Button>
             </div>
