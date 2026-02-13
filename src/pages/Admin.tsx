@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Edit, Save, X, Loader2, History, LayoutDashboard, Plus, Trash2, Database } from "lucide-react";
+import { LogOut, Edit, Save, X, Loader2, History, LayoutDashboard, Plus, Trash2, Database, Trash } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import initialProducts from "../data/products.json";
@@ -23,10 +23,13 @@ export default function Admin() {
   const products = useQuery(api.aurora.getProducts);
   const logs = useQuery(api.aurora.getLogs);
   const updateProduct = useMutation(api.aurora.updateProduct);
+  const addProduct = useMutation(api.aurora.addProduct);
+  const deleteProduct = useMutation(api.aurora.deleteProduct);
   const addLog = useMutation(api.aurora.addLog);
   const seedProducts = useMutation(api.aurora.seedProducts);
 
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [isAddingNew, setIsAddingNew] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"products" | "logs">("products");
 
@@ -69,6 +72,40 @@ export default function Admin() {
 
   const handleEdit = (product: any) => {
     setEditingProduct({ ...product });
+    setIsAddingNew(false);
+  };
+
+  const handleAddNew = () => {
+    setEditingProduct({
+      id: `prod-${Date.now()}`,
+      name: "",
+      price: 0,
+      category: "Geral",
+      description: "",
+      specs: [""],
+      images: {
+        main: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop",
+        gallery: []
+      },
+      whatsappMessage: ""
+    });
+    setIsAddingNew(true);
+  };
+
+  const handleDelete = async (id: any, name: string) => {
+    if (confirm(`Tem certeza que deseja excluir o produto "${name}"?`)) {
+      try {
+        await deleteProduct({ id });
+        await addLog({
+          user: currentUser,
+          action: `Excluiu o produto ${name}`,
+          details: "-",
+          date: new Date().toLocaleString('pt-BR')
+        });
+      } catch (err: any) {
+        alert("Erro ao excluir: " + err.message);
+      }
+    }
   };
 
   const handleSpecChange = (index: number, value: string) => {
@@ -87,25 +124,45 @@ export default function Admin() {
   };
 
   const handleSaveProduct = async () => {
+    if (!editingProduct.name || editingProduct.price <= 0) {
+      alert("Por favor, preencha o nome e um preço válido.");
+      return;
+    }
+
     setIsSaving(true);
     try {
-      await updateProduct({
-        id: editingProduct._id,
-        name: editingProduct.name,
-        price: editingProduct.price,
-        description: editingProduct.description,
-        specs: editingProduct.specs,
-      });
+      if (isAddingNew) {
+        const whatsappMessage = `Olá! Gostaria de pedir o ${editingProduct.name} (R$ ${editingProduct.price.toFixed(2)}). Qual seria o prazo de entrega?`;
+        await addProduct({
+          ...editingProduct,
+          whatsappMessage: editingProduct.whatsappMessage || whatsappMessage
+        });
+        await addLog({
+          user: currentUser,
+          action: `Criou o produto ${editingProduct.name}`,
+          details: `Preço inicial: R$ ${editingProduct.price}`,
+          date: new Date().toLocaleString('pt-BR')
+        });
+      } else {
+        await updateProduct({
+          id: editingProduct._id,
+          name: editingProduct.name,
+          price: editingProduct.price,
+          description: editingProduct.description,
+          specs: editingProduct.specs,
+          category: editingProduct.category,
+        });
 
-      await addLog({
-        user: currentUser,
-        action: `Alterou ${editingProduct.name}`,
-        details: `Preço: R$ ${editingProduct.price}`,
-        date: new Date().toLocaleString('pt-BR')
-      });
+        await addLog({
+          user: currentUser,
+          action: `Alterou ${editingProduct.name}`,
+          details: `Preço: R$ ${editingProduct.price}`,
+          date: new Date().toLocaleString('pt-BR')
+        });
+      }
 
       setEditingProduct(null);
-      alert("Salvo com sucesso! A mudança é instantânea.");
+      alert("Salvo com sucesso!");
     } catch (err: any) {
       alert("Erro ao salvar: " + err.message);
     } finally {
@@ -167,26 +224,40 @@ export default function Admin() {
           <div className="space-y-4">
             <div className="flex justify-between items-center px-2">
               <h2 className="text-xl font-heading font-bold text-[#524330]">Catálogo de Produtos</h2>
-              {products.length === 0 && (
-                <Button onClick={handleSeed} variant="outline" size="sm" className="rounded-full border-[#a5daeb] text-[#524330]">
-                  <Database className="w-4 h-4 mr-2" /> Importar Inicial
+              <div className="flex gap-2">
+                {products.length === 0 && (
+                  <Button onClick={handleSeed} variant="outline" size="sm" className="rounded-full border-[#a5daeb] text-[#524330]">
+                    <Database className="w-4 h-4 mr-2" /> Importar Inicial
+                  </Button>
+                )}
+                <Button onClick={handleAddNew} className="bg-[#a5daeb] hover:bg-[#8ecce0] text-[#524330] rounded-full h-10 px-4 font-bold text-sm">
+                  <Plus className="w-4 h-4 mr-2" /> Novo Produto
                 </Button>
-              )}
+              </div>
             </div>
             {products.map((product) => (
-              <Card key={product.id} className="overflow-hidden border-none shadow-sm rounded-2xl active:scale-[0.98] transition-transform">
+              <Card key={product._id} className="overflow-hidden border-none shadow-sm rounded-2xl active:scale-[0.98] transition-transform">
                 <div className="flex items-center p-3 gap-4">
                   <img src={product.images.main} className="w-20 h-20 rounded-xl object-cover flex-shrink-0" />
                   <div className="flex-grow min-w-0">
                     <h3 className="font-bold text-[#524330] truncate text-base">{product.name}</h3>
                     <p className="text-[#a5daeb] font-bold text-lg">R$ {product.price.toFixed(2)}</p>
                   </div>
-                  <Button 
-                    onClick={() => handleEdit(product)} 
-                    className="bg-[#f5ebe0] hover:bg-[#eddecb] text-[#524330] rounded-xl h-12 w-12 p-0"
-                  >
-                    <Edit className="w-5 h-5" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => handleEdit(product)} 
+                      className="bg-[#f5ebe0] hover:bg-[#eddecb] text-[#524330] rounded-xl h-12 w-12 p-0"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </Button>
+                    <Button 
+                      onClick={() => handleDelete(product._id, product.name)} 
+                      variant="ghost"
+                      className="text-red-400 hover:text-red-600 rounded-xl h-12 w-12 p-0"
+                    >
+                      <Trash className="w-5 h-5" />
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
@@ -216,21 +287,38 @@ export default function Admin() {
           <Card className="w-full max-w-2xl h-[92vh] sm:h-auto sm:max-h-[90vh] overflow-y-auto border-none rounded-t-[32px] sm:rounded-3xl shadow-2xl flex flex-col">
             <div className="h-1.5 w-12 bg-gray-200 mx-auto mt-3 rounded-full sm:hidden" />
             <CardHeader className="flex flex-row items-center justify-between border-b px-6 py-4">
-              <CardTitle className="text-lg font-heading text-[#524330]">Editando Produto</CardTitle>
+              <CardTitle className="text-lg font-heading text-[#524330]">
+                {isAddingNew ? "Novo Produto" : "Editando Produto"}
+              </CardTitle>
               <Button variant="ghost" onClick={() => setEditingProduct(null)} className="rounded-full"><X /></Button>
             </CardHeader>
             <CardContent className="p-6 space-y-6 flex-grow">
-              <div className="flex justify-center mb-4">
+              <div className="flex flex-col items-center mb-4 gap-2">
                 <img src={editingProduct.images.main} className="w-32 h-32 rounded-2xl object-cover shadow-md" />
+                <div className="w-full max-w-sm">
+                  <label className="text-xs font-bold text-gray-400 uppercase">Link da Imagem Principal</label>
+                  <Input 
+                    value={editingProduct.images.main} 
+                    onChange={(e) => setEditingProduct({...editingProduct, images: {...editingProduct.images, main: e.target.value}})} 
+                    className="h-10 rounded-xl border-[#e5d5c5] text-xs" 
+                    placeholder="URL da imagem (ex: /images/products/item.jpg)"
+                  />
+                </div>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-[#524330]">Nome da Peça</label>
                   <Input value={editingProduct.name} onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})} className="h-14 rounded-2xl border-[#e5d5c5] text-lg" />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-[#524330]">Preço de Venda (R$)</label>
-                  <Input type="number" step="0.01" value={editingProduct.price} onChange={(e) => setEditingProduct({...editingProduct, price: parseFloat(e.target.value)})} className="h-14 rounded-2xl border-[#e5d5c5] text-lg font-bold text-[#a5daeb]" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-[#524330]">Preço de Venda (R$)</label>
+                    <Input type="number" step="0.01" value={editingProduct.price} onChange={(e) => setEditingProduct({...editingProduct, price: parseFloat(e.target.value)})} className="h-14 rounded-2xl border-[#e5d5c5] text-lg font-bold text-[#a5daeb]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-[#524330]">Categoria</label>
+                    <Input value={editingProduct.category} onChange={(e) => setEditingProduct({...editingProduct, category: e.target.value})} className="h-14 rounded-2xl border-[#e5d5c5] text-lg" />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-[#524330]">Descrição para o Site</label>
@@ -265,7 +353,7 @@ export default function Admin() {
             <div className="p-6 bg-gray-50 border-t flex flex-col gap-3">
               <Button onClick={handleSaveProduct} disabled={isSaving} className="w-full bg-[#a5daeb] hover:bg-[#8ecce0] text-[#524330] font-bold h-16 rounded-2xl text-lg shadow-lg">
                 {isSaving ? <Loader2 className="w-6 h-6 animate-spin mr-2" /> : <Save className="w-6 h-6 mr-2" />}
-                Salvar no Banco de Dados
+                {isAddingNew ? "Criar Novo Produto" : "Salvar Alterações"}
               </Button>
               <Button variant="ghost" onClick={() => setEditingProduct(null)} className="w-full h-12 text-gray-400 font-medium">Cancelar e Voltar</Button>
             </div>

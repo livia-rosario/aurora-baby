@@ -5,10 +5,12 @@ import { ProductModal } from "@/components/ProductModal";
 import { Button } from "@/components/ui/button";
 import InstagramFeed from "@/components/InstagramFeed";
 import Footer from "@/components/Footer";
-import { Instagram, Phone, Wallet, Clock, Truck, CreditCard } from "lucide-react";
-import products from "@/data/products.json";
+import { Instagram, Phone, Wallet, Clock, Truck, CreditCard, Loader2 } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 interface Product {
+  _id: string;
   id: string;
   name: string;
   price: number;
@@ -24,8 +26,9 @@ interface Product {
 
 export default function Home() {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const products = useQuery(api.aurora.getProducts) as Product[] | undefined;
 
-  const selectedProduct = products.find((p) => p.id === selectedProductId) as Product | undefined;
+  const selectedProduct = products?.find((p) => p.id === selectedProductId);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--base-bg)" }}>
@@ -46,17 +49,24 @@ export default function Home() {
           </h2>
 
           {/* Product Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                name={product.name}
-                price={product.price}
-                onOpen={setSelectedProductId}
-              />
-            ))}
-          </div>
+          {!products ? (
+            <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+              <Loader2 className="w-10 h-10 animate-spin mb-4 text-[#a5daeb]" />
+              <p className="animate-pulse">Carregando catálogo...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  onOpen={setSelectedProductId}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Instagram Section */}
           <div className="text-center">
@@ -175,7 +185,7 @@ export default function Home() {
       {/* Product Modal */}
       {selectedProduct && (
         <ProductModal
-          product={selectedProduct}
+          product={selectedProduct as any}
           isOpen={!!selectedProductId}
           onClose={() => setSelectedProductId(null)}
         />
