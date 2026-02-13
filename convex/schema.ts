@@ -21,4 +21,10 @@ export default defineSchema({
     details: v.string(),
     date: v.string(),
   }),
+  instagramFeed: defineTable({
+    imageUrl: v.string(),
+    caption: v.optional(v.string()),
+    order: v.number(),
+    createdAt: v.string(),
+  }),
 });

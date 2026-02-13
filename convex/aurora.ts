@@ -87,3 +87,51 @@ export const seedProducts = mutation({
     }
   },
 });
+
+export const getInstagramFeed = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("instagramFeed").order("asc").collect();
+  },
+});
+
+export const addInstagramImage = mutation({
+  args: {
+    imageUrl: v.string(),
+    caption: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const maxOrder = await ctx.db
+      .query("instagramFeed")
+      .collect()
+      .then((items) => Math.max(...items.map((i) => i.order), 0));
+    
+    await ctx.db.insert("instagramFeed", {
+      imageUrl: args.imageUrl,
+      caption: args.caption || "",
+      order: maxOrder + 1,
+      createdAt: new Date().toLocaleString("pt-BR"),
+    });
+  },
+});
+
+export const deleteInstagramImage = mutation({
+  args: { id: v.id("instagramFeed") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+  },
+});
+
+export const reorderInstagramImages = mutation({
+  args: {
+    images: v.array(v.object({
+      id: v.id("instagramFeed"),
+      order: v.number(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    for (const img of args.images) {
+      await ctx.db.patch(img.id, { order: img.order });
+    }
+  },
+});

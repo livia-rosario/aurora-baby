@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Edit, Save, X, Loader2, History, LayoutDashboard, Plus, Trash2, Database, Trash } from "lucide-react";
+import { LogOut, Edit, Save, X, Loader2, History, LayoutDashboard, Plus, Trash2, Database, Trash, Image as ImageIcon, Upload } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import initialProducts from "../data/products.json";
@@ -22,16 +22,21 @@ export default function Admin() {
   
   const products = useQuery(api.aurora.getProducts);
   const logs = useQuery(api.aurora.getLogs);
+  const instagramFeed = useQuery(api.aurora.getInstagramFeed);
   const updateProduct = useMutation(api.aurora.updateProduct);
   const addProduct = useMutation(api.aurora.addProduct);
   const deleteProduct = useMutation(api.aurora.deleteProduct);
   const addLog = useMutation(api.aurora.addLog);
   const seedProducts = useMutation(api.aurora.seedProducts);
+  const addInstagramImage = useMutation(api.aurora.addInstagramImage);
+  const deleteInstagramImage = useMutation(api.aurora.deleteInstagramImage);
 
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"products" | "logs">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "logs" | "instagram">("products");
+  const [instagramCaption, setInstagramCaption] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   useEffect(() => {
     const savedUser = sessionStorage.getItem("admin_user");
@@ -170,6 +175,73 @@ export default function Admin() {
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    try {
+      // Converter imagem para base64 para armazenar no Convex
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64 = event.target?.result as string;
+        
+        // Para simplificar, vamos usar um serviço de upload gratuito (imgbb ou similar)
+        // Mas como alternativa, você pode usar o Convex File Storage
+        // Por enquanto, vamos usar uma URL temporária
+        
+        // Se quiser usar um serviço real, descomente e configure:
+        // const formData = new FormData();
+        // formData.append('image', file);
+        // const response = await fetch('https://api.imgbb.com/1/upload?key=YOUR_KEY', {
+        //   method: 'POST',
+        //   body: formData
+        // });
+        // const data = await response.json();
+        // const imageUrl = data.data.url;
+
+        // Para agora, vamos usar uma URL de placeholder
+        const imageUrl = base64;
+        
+        await addInstagramImage({
+          imageUrl,
+          caption: instagramCaption
+        });
+
+        await addLog({
+          user: currentUser,
+          action: "Adicionou uma foto ao feed do Instagram",
+          details: instagramCaption || "Sem descrição",
+          date: new Date().toLocaleString('pt-BR')
+        });
+
+        setInstagramCaption("");
+        alert("Foto adicionada com sucesso!");
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      alert("Erro ao fazer upload: " + err.message);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleDeleteInstagramImage = async (id: any) => {
+    if (confirm("Tem certeza que deseja excluir esta foto do feed?")) {
+      try {
+        await deleteInstagramImage({ id });
+        await addLog({
+          user: currentUser,
+          action: "Removeu uma foto do feed do Instagram",
+          details: "-",
+          date: new Date().toLocaleString('pt-BR')
+        });
+      } catch (err: any) {
+        alert("Erro ao excluir: " + err.message);
+      }
+    }
+  };
+
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fdf8f3] px-4">
@@ -206,12 +278,15 @@ export default function Admin() {
       </header>
 
       <main className="flex-grow max-w-3xl mx-auto w-full p-4 pb-32">
-        <div className="flex bg-white rounded-2xl p-1 mb-6 shadow-sm border border-[#e5d5c5]">
-          <button onClick={() => setActiveTab("products")} className={`flex-1 flex items-center justify-center py-3 rounded-xl transition-all ${activeTab === 'products' ? 'bg-[#a5daeb] text-[#524330] font-bold shadow-inner' : 'text-gray-400'}`}>
-            <LayoutDashboard className="w-5 h-5 mr-2" /> <span className="text-sm">Produtos</span>
+        <div className="flex bg-white rounded-2xl p-1 mb-6 shadow-sm border border-[#e5d5c5] overflow-x-auto">
+          <button onClick={() => setActiveTab("products")} className={`flex items-center justify-center py-3 px-4 rounded-xl transition-all whitespace-nowrap text-sm ${activeTab === 'products' ? 'bg-[#a5daeb] text-[#524330] font-bold shadow-inner' : 'text-gray-400'}`}>
+            <LayoutDashboard className="w-5 h-5 mr-2" /> Produtos
           </button>
-          <button onClick={() => setActiveTab("logs")} className={`flex-1 flex items-center justify-center py-3 rounded-xl transition-all ${activeTab === 'logs' ? 'bg-[#a5daeb] text-[#524330] font-bold shadow-inner' : 'text-gray-400'}`}>
-            <History className="w-5 h-5 mr-2" /> <span className="text-sm">Atividade</span>
+          <button onClick={() => setActiveTab("instagram")} className={`flex items-center justify-center py-3 px-4 rounded-xl transition-all whitespace-nowrap text-sm ${activeTab === 'instagram' ? 'bg-[#a5daeb] text-[#524330] font-bold shadow-inner' : 'text-gray-400'}`}>
+            <ImageIcon className="w-5 h-5 mr-2" /> Instagram
+          </button>
+          <button onClick={() => setActiveTab("logs")} className={`flex items-center justify-center py-3 px-4 rounded-xl transition-all whitespace-nowrap text-sm ${activeTab === 'logs' ? 'bg-[#a5daeb] text-[#524330] font-bold shadow-inner' : 'text-gray-400'}`}>
+            <History className="w-5 h-5 mr-2" /> Atividade
           </button>
         </div>
 
@@ -238,7 +313,7 @@ export default function Admin() {
             {products.map((product) => (
               <Card key={product._id} className="overflow-hidden border-none shadow-sm rounded-2xl active:scale-[0.98] transition-transform">
                 <div className="flex items-center p-3 gap-4">
-                  <img src={product.images.main} className="w-20 h-20 rounded-xl object-cover flex-shrink-0" />
+                  <img src={product.images.main} className="w-20 h-20 rounded-xl object-cover flex-shrink-0" onError={(e) => (e.currentTarget.src = "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=100&h=100&fit=crop")} />
                   <div className="flex-grow min-w-0">
                     <h3 className="font-bold text-[#524330] truncate text-base">{product.name}</h3>
                     <p className="text-[#a5daeb] font-bold text-lg">R$ {product.price.toFixed(2)}</p>
@@ -261,6 +336,69 @@ export default function Admin() {
                 </div>
               </Card>
             ))}
+          </div>
+        ) : activeTab === "instagram" ? (
+          <div className="space-y-4">
+            <h2 className="text-xl font-heading font-bold text-[#524330] px-2">Gerenciar Feed do Instagram</h2>
+            
+            {/* Upload Section */}
+            <Card className="overflow-hidden border-none shadow-sm rounded-2xl">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <label className="block">
+                    <div className="border-2 border-dashed border-[#a5daeb] rounded-2xl p-8 text-center cursor-pointer hover:bg-[#f5ebe0] transition-colors">
+                      <Upload className="w-8 h-8 mx-auto mb-2 text-[#a5daeb]" />
+                      <p className="text-sm font-bold text-[#524330]">Clique para escolher uma foto</p>
+                      <p className="text-xs text-gray-400 mt-1">ou arraste uma imagem aqui</p>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleImageUpload} 
+                        disabled={isUploadingImage}
+                        className="hidden"
+                      />
+                    </div>
+                  </label>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-[#524330]">Descrição (opcional)</label>
+                    <Input 
+                      value={instagramCaption} 
+                      onChange={(e) => setInstagramCaption(e.target.value)} 
+                      placeholder="Ex: Novo enxoval da coleção primavera"
+                      className="h-10 rounded-xl border-[#e5d5c5]"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Feed Preview */}
+            <h3 className="text-lg font-heading font-bold text-[#524330] px-2 mt-6">Fotos no Feed</h3>
+            {instagramFeed && instagramFeed.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {instagramFeed.map((item: any) => (
+                  <Card key={item._id} className="overflow-hidden border-none shadow-sm rounded-2xl relative group">
+                    <img 
+                      src={item.imageUrl} 
+                      alt={item.caption} 
+                      className="w-full h-40 object-cover"
+                      onError={(e) => (e.currentTarget.src = "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=300&h=300&fit=crop")}
+                    />
+                    <Button 
+                      onClick={() => handleDeleteInstagramImage(item._id)}
+                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl p-8 text-center text-gray-400 italic border border-[#e5d5c5]">
+                Nenhuma foto adicionada ainda. Comece a adicionar fotos para o feed!
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -294,7 +432,7 @@ export default function Admin() {
             </CardHeader>
             <CardContent className="p-6 space-y-6 flex-grow">
               <div className="flex flex-col items-center mb-4 gap-2">
-                <img src={editingProduct.images.main} className="w-32 h-32 rounded-2xl object-cover shadow-md" />
+                <img src={editingProduct.images.main} className="w-32 h-32 rounded-2xl object-cover shadow-md" onError={(e) => (e.currentTarget.src = "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=200&h=200&fit=crop")} />
                 <div className="w-full max-w-sm">
                   <label className="text-xs font-bold text-gray-400 uppercase">Link da Imagem Principal</label>
                   <Input 
