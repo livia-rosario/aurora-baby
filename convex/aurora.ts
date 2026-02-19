@@ -135,3 +135,22 @@ export const reorderInstagramImages = mutation({
     }
   },
 });
+
+export const seedInstagramFeed = mutation({
+  args: {
+    images: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db.query("instagramFeed").collect();
+    if (existing.length === 0) {
+      for (let i = 0; i < args.images.length; i++) {
+        await ctx.db.insert("instagramFeed", {
+          imageUrl: args.images[i],
+          caption: `Post antigo ${i + 1}`,
+          order: i,
+          createdAt: new Date().toLocaleString("pt-BR"),
+        });
+      }
+    }
+  },
+});

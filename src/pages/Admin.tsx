@@ -30,6 +30,7 @@ export default function Admin() {
   const seedProducts = useMutation(api.aurora.seedProducts);
   const addInstagramImage = useMutation(api.aurora.addInstagramImage);
   const deleteInstagramImage = useMutation(api.aurora.deleteInstagramImage);
+  const seedInstagramFeed = useMutation(api.aurora.seedInstagramFeed);
 
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -69,6 +70,18 @@ export default function Admin() {
       try {
         await seedProducts({ items: initialProducts });
         alert("Produtos importados com sucesso!");
+      } catch (err: any) {
+        alert("Erro na importação: " + err.message);
+      }
+    }
+  };
+
+  const handleSeedInstagram = async () => {
+    const oldImages = Array.from({ length: 15 }, (_, i) => `/images/instagram/ig-${i + 1}.png`);
+    if (confirm("Deseja importar as fotos antigas do Instagram para o novo painel?")) {
+      try {
+        await seedInstagramFeed({ images: oldImages });
+        alert("Fotos importadas com sucesso!");
       } catch (err: any) {
         alert("Erro na importação: " + err.message);
       }
@@ -128,6 +141,28 @@ export default function Admin() {
     setEditingProduct({ ...editingProduct, specs: newSpecs });
   };
 
+  const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64 = event.target?.result as string;
+        setEditingProduct({
+          ...editingProduct,
+          images: { ...editingProduct.images, main: base64 }
+        });
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      alert("Erro ao processar imagem: " + err.message);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   const handleSaveProduct = async () => {
     if (!editingProduct.name || editingProduct.price <= 0) {
       alert("Por favor, preencha o nome e um preço válido.");
@@ -181,30 +216,11 @@ export default function Admin() {
 
     setIsUploadingImage(true);
     try {
-      // Converter imagem para base64 para armazenar no Convex
       const reader = new FileReader();
       reader.onload = async (event) => {
         const base64 = event.target?.result as string;
-        
-        // Para simplificar, vamos usar um serviço de upload gratuito (imgbb ou similar)
-        // Mas como alternativa, você pode usar o Convex File Storage
-        // Por enquanto, vamos usar uma URL temporária
-        
-        // Se quiser usar um serviço real, descomente e configure:
-        // const formData = new FormData();
-        // formData.append('image', file);
-        // const response = await fetch('https://api.imgbb.com/1/upload?key=YOUR_KEY', {
-        //   method: 'POST',
-        //   body: formData
-        // });
-        // const data = await response.json();
-        // const imageUrl = data.data.url;
-
-        // Para agora, vamos usar uma URL de placeholder
-        const imageUrl = base64;
-        
         await addInstagramImage({
-          imageUrl,
+          imageUrl: base64,
           caption: instagramCaption
         });
 
@@ -339,7 +355,14 @@ export default function Admin() {
           </div>
         ) : activeTab === "instagram" ? (
           <div className="space-y-4">
-            <h2 className="text-xl font-heading font-bold text-[#524330] px-2">Gerenciar Feed do Instagram</h2>
+            <div className="flex justify-between items-center px-2">
+              <h2 className="text-xl font-heading font-bold text-[#524330]">Gerenciar Feed do Instagram</h2>
+              {(!instagramFeed || instagramFeed.length === 0) && (
+                <Button onClick={handleSeedInstagram} variant="outline" size="sm" className="rounded-full border-[#a5daeb] text-[#524330]">
+                  <Database className="w-4 h-4 mr-2" /> Importar Antigas
+                </Button>
+              )}
+            </div>
             
             {/* Upload Section */}
             <Card className="overflow-hidden border-none shadow-sm rounded-2xl">
@@ -431,16 +454,32 @@ export default function Admin() {
               <Button variant="ghost" onClick={() => setEditingProduct(null)} className="rounded-full"><X /></Button>
             </CardHeader>
             <CardContent className="p-6 space-y-6 flex-grow">
-              <div className="flex flex-col items-center mb-4 gap-2">
+              <div className="flex flex-col items-center mb-4 gap-4">
                 <img src={editingProduct.images.main} className="w-32 h-32 rounded-2xl object-cover shadow-md" onError={(e) => (e.currentTarget.src = "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=200&h=200&fit=crop")} />
+                
                 <div className="w-full max-w-sm">
-                  <label className="text-xs font-bold text-gray-400 uppercase">Link da Imagem Principal</label>
-                  <Input 
-                    value={editingProduct.images.main} 
-                    onChange={(e) => setEditingProduct({...editingProduct, images: {...editingProduct.images, main: e.target.value}})} 
-                    className="h-10 rounded-xl border-[#e5d5c5] text-xs" 
-                    placeholder="URL da imagem (ex: /images/products/item.jpg)"
-                  />
+                  <label className="block">
+                    <div className="border-2 border-dashed border-[#a5daeb] rounded-2xl p-4 text-center cursor-pointer hover:bg-[#f5ebe0] transition-colors">
+                      <Upload className="w-6 h-6 mx-auto mb-1 text-[#a5daeb]" />
+                      <p className="text-xs font-bold text-[#524330]">Escolher foto do produto</p>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleProductImageUpload} 
+                        disabled={isUploadingImage}
+                        className="hidden"
+                      />
+                    </div>
+                  </label>
+                  <div className="mt-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">Ou cole o link da imagem</label>
+                    <Input 
+                      value={editingProduct.images.main} 
+                      onChange={(e) => setEditingProduct({...editingProduct, images: {...editingProduct.images, main: e.target.value}})} 
+                      className="h-8 rounded-xl border-[#e5d5c5] text-xs" 
+                      placeholder="URL da imagem"
+                    />
+                  </div>
                 </div>
               </div>
               <div className="space-y-4">
