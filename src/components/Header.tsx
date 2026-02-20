@@ -42,6 +42,13 @@ export function Header() {
               Como Comprar
             </button>
             <a
+              href="/pedidos"
+              className="hover:opacity-70 transition duration-200 text-sm px-3 py-1 rounded-full"
+              style={{ color: "var(--accent-blue)", backgroundColor: "rgba(165, 218, 235, 0.1)" }}
+            >
+              Pedidos
+            </a>
+            <a
               href="https://wa.me/5527992941519"
               target="_blank"
               rel="noopener noreferrer"
@@ -85,6 +92,13 @@ export function Header() {
             >
               Como Comprar
             </button>
+            <a
+              href="/pedidos"
+              className="block py-2 px-3 rounded-md hover:opacity-70 transition duration-200"
+              style={{ color: "var(--accent-blue)", fontWeight: "bold" }}
+            >
+              📋 Pedidos
+            </a>
             <a
               href="https://wa.me/5527992941519"
               target="_blank"

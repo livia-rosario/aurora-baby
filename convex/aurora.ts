@@ -154,3 +154,142 @@ export const seedInstagramFeed = mutation({
     }
   },
 });
+
+export const createOrder = mutation({
+  args: {
+    clientName: v.string(),
+    clientPhone: v.optional(v.string()),
+    items: v.array(v.object({
+      productId: v.string(),
+      productName: v.string(),
+      quantity: v.number(),
+      unitPrice: v.number(),
+    })),
+    observations: v.optional(v.string()),
+    deliveryDate: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const totalValue = args.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+    
+    const orderId = await ctx.db.insert("orders", {
+      clientName: args.clientName,
+      clientPhone: args.clientPhone || "",
+      status: "Pedido Feito",
+      assignedTo: "",
+      totalValue,
+      amountPaid: 0,
+      observations: args.observations || "",
+      createdAt: new Date().toLocaleString("pt-BR"),
+      updatedAt: new Date().toLocaleString("pt-BR"),
+      deliveryDate: args.deliveryDate || "",
+    });
+
+    for (const item of args.items) {
+      await ctx.db.insert("orderItems", {
+        orderId,
+        productId: item.productId,
+        productName: item.productName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.unitPrice * item.quantity,
+      });
+    }
+
+    return orderId;
+  },
+});
+
+export const getOrders = query({
+  args: {},
+  handler: async (ctx) => {
+    const orders = await ctx.db.query("orders").collect();
+    const ordersWithItems = await Promise.all(
+      orders.map(async (order) => {
+        const items = await ctx.db
+          .query("orderItems")
+          .filter((q) => q.eq(q.field("orderId"), order._id))
+          .collect();
+        return { ...order, items };
+      })
+    );
+    return ordersWithItems;
+  },
+});
+
+export const updateOrderStatus = mutation({
+  args: {
+    orderId: v.id("orders"),
+    status: v.string(),
+    assignedTo: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.orderId, {
+      status: args.status,
+      assignedTo: args.assignedTo || "",
+      updatedAt: new Date().toLocaleString("pt-BR"),
+    });
+  },
+});
+
+export const updateOrderPayment = mutation({
+  args: {
+    orderId: v.id("orders"),
+    amountPaid: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.orderId, {
+      amountPaid: args.amountPaid,
+      updatedAt: new Date().toLocaleString("pt-BR"),
+    });
+  },
+});
+
+export const updateOrderObservations = mutation({
+  args: {
+    orderId: v.id("orders"),
+    observations: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.orderId, {
+      observations: args.observations,
+      updatedAt: new Date().toLocaleString("pt-BR"),
+    });
+  },
+});
+
+export const deleteOrder = mutation({
+  args: { orderId: v.id("orders") },
+  handler: async (ctx, args) => {
+    const items = await ctx.db
+      .query("orderItems")
+      .filter((q) => q.eq(q.field("orderId"), args.orderId))
+      .collect();
+    
+    for (const item of items) {
+      await ctx.db.delete(item._id);
+    }
+    
+    await ctx.db.delete(args.orderId);
+  },
+});
+
+export const getOrderMetrics = query({
+  args: {},
+  handler: async (ctx) => {
+    const orders = await ctx.db.query("orders").collect();
+    
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + order.totalValue, 0);
+    const totalReceived = orders.reduce((sum, order) => sum + order.amountPaid, 0);
+    const totalPending = totalRevenue - totalReceived;
+    const deliveredOrders = orders.filter((o) => o.status === "Entregue").length;
+    
+    return {
+      totalOrders,
+      totalRevenue,
+      totalReceived,
+      totalPending,
+      deliveredOrders,
+    };
+  },
+});
