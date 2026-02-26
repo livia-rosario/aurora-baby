@@ -5,7 +5,7 @@ import { ProductModal } from "@/components/ProductModal";
 import { Button } from "@/components/ui/button";
 import InstagramFeed from "@/components/InstagramFeed";
 import Footer from "@/components/Footer";
-import { Instagram, Phone, Wallet, Clock, Truck, CreditCard, Loader2 } from "lucide-react";
+import { Instagram, Phone, Wallet, Clock, Truck, CreditCard } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
@@ -22,6 +22,22 @@ interface Product {
     gallery: string[];
   };
   whatsappMessage: string;
+}
+
+function ProductCardSkeleton() {
+  return (
+    <div className="flex h-full w-full flex-col rounded-2xl border bg-white p-6 shadow-md animate-pulse"
+      style={{ borderColor: "rgba(82, 67, 48, 0.1)" }}>
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 py-4">
+        <div className="h-7 w-3/4 rounded-lg" style={{ backgroundColor: "rgba(82, 67, 48, 0.08)" }} />
+        <div className="h-9 w-1/2 rounded-lg" style={{ backgroundColor: "rgba(82, 67, 48, 0.08)" }} />
+      </div>
+      <div className="mt-auto flex items-center justify-between pt-4">
+        <div className="h-4 w-20 rounded-lg" style={{ backgroundColor: "rgba(82, 67, 48, 0.08)" }} />
+        <div className="h-5 w-5 rounded-full" style={{ backgroundColor: "rgba(82, 67, 48, 0.08)" }} />
+      </div>
+    </div>
+  );
 }
 
 export default function Home() {
@@ -48,25 +64,19 @@ export default function Home() {
             Catálogo & Valores
           </h2>
 
-          {/* Product Grid */}
-          {!products ? (
-            <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-              <Loader2 className="w-10 h-10 animate-spin mb-4 text-[#a5daeb]" />
-              <p className="animate-pulse">Carregando catálogo...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  id={product.id}
-                  name={product.name}
-                  price={product.price}
-                  onOpen={setSelectedProductId}
-                />
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {!products
+              ? Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)
+              : products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    id={product.id}
+                    name={product.name}
+                    price={product.price}
+                    onOpen={setSelectedProductId}
+                  />
+                ))}
+          </div>
 
           {/* Instagram Section */}
           <div className="text-center">
@@ -81,7 +91,6 @@ export default function Home() {
               <span>Ver Modelos no Instagram</span>
             </a>
             
-            {/* Simulated Instagram Feed */}
             <InstagramFeed />
           </div>
         </section>
@@ -92,9 +101,7 @@ export default function Home() {
             Como Comprar
           </h2>
 
-          {/* Process Steps */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-            {/* Step 1: Atendimento */}
             <div className="bg-white p-6 rounded-2xl shadow-md border-t-4 hover:shadow-lg transition duration-300" style={{ borderColor: "var(--accent-blue)" }}>
               <h3 className="font-heading text-xl font-bold flex items-center mb-3">
                 <Phone className="w-6 h-6 mr-2" style={{ color: "var(--accent-blue)" }} />
@@ -105,7 +112,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Step 2: Entrada */}
             <div className="bg-white p-6 rounded-2xl shadow-md border-t-4 hover:shadow-lg transition duration-300" style={{ borderColor: "var(--accent-coral)" }}>
               <h3 className="font-heading text-xl font-bold flex items-center mb-3">
                 <Wallet className="w-6 h-6 mr-2" style={{ color: "var(--accent-coral)" }} />
@@ -116,7 +122,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Step 3: Prazo */}
             <div className="bg-white p-6 rounded-2xl shadow-md border-t-4 hover:shadow-lg transition duration-300" style={{ borderColor: "var(--accent-yellow)" }}>
               <h3 className="font-heading text-xl font-bold flex items-center mb-3">
                 <Clock className="w-6 h-6 mr-2" style={{ color: "var(--accent-yellow)" }} />
@@ -127,7 +132,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Step 4: Entrega */}
             <div className="bg-white p-6 rounded-2xl shadow-md border-t-4 hover:shadow-lg transition duration-300" style={{ borderColor: "var(--accent-blue)" }}>
               <h3 className="font-heading text-xl font-bold flex items-center mb-3">
                 <Truck className="w-6 h-6 mr-2" style={{ color: "var(--accent-blue)" }} />
@@ -139,7 +143,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Formas de Pagamento */}
           <div className="bg-white p-8 rounded-2xl shadow-md border" style={{ borderColor: "rgba(82, 67, 48, 0.1)" }}>
             <h3 className="font-heading text-2xl font-bold mb-6 flex items-center" style={{ color: "var(--accent-coral)" }}>
               <CreditCard className="w-6 h-6 mr-2" />
@@ -179,10 +182,8 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Footer Section */}
       <Footer />
 
-      {/* Product Modal */}
       {selectedProduct && (
         <ProductModal
           product={selectedProduct as any}
