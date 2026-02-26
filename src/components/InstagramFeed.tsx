@@ -7,39 +7,68 @@ const INSTAGRAM_URL = "https://www.instagram.com/aurorababyloja";
 
 const InstagramFeed: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const products = useQuery(api.aurora.getProducts) as any[] | undefined;
   const instagramImages = useQuery(api.aurora.getInstagramFeed) as any[] | undefined;
 
+  // Combina imagens dos produtos + imagens do feed manual
+  const allImages = React.useMemo(() => {
+    const imgs: { imageUrl: string; caption: string }[] = [];
+
+    // Imagens dos produtos
+    if (products) {
+      for (const product of products) {
+        if (product.images?.main) {
+          imgs.push({ imageUrl: product.images.main, caption: product.name });
+        }
+        if (product.images?.gallery) {
+          for (const img of product.images.gallery) {
+            imgs.push({ imageUrl: img, caption: product.name });
+          }
+        }
+      }
+    }
+
+    // Imagens do feed manual (admin)
+    if (instagramImages) {
+      for (const item of instagramImages) {
+        imgs.push({ imageUrl: item.imageUrl, caption: item.caption || "" });
+      }
+    }
+
+    return imgs;
+  }, [products, instagramImages]);
+
   useEffect(() => {
-    if (!instagramImages || instagramImages.length === 0) return;
+    if (allImages.length === 0) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 4 >= instagramImages.length ? 0 : prev + 4));
+      setCurrentIndex((prev) => (prev + 4 >= allImages.length ? 0 : prev + 4));
     }, 8000);
 
     return () => clearInterval(interval);
-  }, [instagramImages]);
+  }, [allImages]);
 
-  if (!instagramImages || instagramImages.length === 0) {
+  if (!products || !instagramImages) return null;
+
+  if (allImages.length === 0) {
     return (
       <div className="w-full max-w-2xl mx-auto my-8 px-4 text-center text-gray-400 italic">
-        Nenhuma foto no feed do Instagram ainda. Adicione algumas no painel Admin!
+        Nenhuma foto ainda.
       </div>
     );
   }
 
-  const currentImages = instagramImages.slice(currentIndex, currentIndex + 4);
-  
-  // Caso chegue no fim e não tenha 4 imagens, completa com as primeiras
+  const currentImages = allImages.slice(currentIndex, currentIndex + 4);
   if (currentImages.length < 4) {
     const needed = 4 - currentImages.length;
-    currentImages.push(...instagramImages.slice(0, needed));
+    currentImages.push(...allImages.slice(0, needed));
   }
 
   return (
     <div className="w-full max-w-2xl mx-auto my-8 px-4">
       <div className="grid grid-cols-2 gap-4">
         <AnimatePresence mode="wait">
-          <motion.div 
+          <motion.div
             key={currentIndex}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -57,7 +86,7 @@ const InstagramFeed: React.FC = () => {
               >
                 <motion.img
                   src={item.imageUrl}
-                  alt={item.caption || `Instagram post ${index + 1}`}
+                  alt={item.caption || `Foto ${index + 1}`}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   loading="lazy"
                   onError={(e) => {
