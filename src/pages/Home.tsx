@@ -5,6 +5,8 @@ import { ProductModal } from "@/components/ProductModal";
 import { Button } from "@/components/ui/button";
 import InstagramFeed from "@/components/InstagramFeed";
 import Footer from "@/components/Footer";
+import { Cart } from "@/components/Cart";
+import { CartProvider } from "@/components/CartContext";
 import { Instagram, Phone, Wallet, Clock, Truck, CreditCard } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -40,10 +42,9 @@ function ProductCardSkeleton() {
   );
 }
 
-export default function Home() {
+function HomeContent() {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const products = useQuery(api.aurora.getProducts) as Product[] | undefined;
-
   const selectedProduct = products?.find((p) => p.id === selectedProductId);
 
   return (
@@ -51,14 +52,12 @@ export default function Home() {
       <Header />
 
       <main className="flex-grow max-w-7xl mx-auto pt-10 pb-20 px-4 sm:px-6 lg:px-8">
-        {/* Hero Section */}
         <section id="hero" className="pt-6 pb-10 text-center">
           <p className="text-xl sm:text-2xl font-medium font-heading" style={{ color: "var(--soft-brown)" }}>
             Peças personalizadas com amor para o seu bebê.
           </p>
         </section>
 
-        {/* Catálogo & Valores */}
         <section id="catalogo" className="pt-16 md:pt-20 pb-16">
           <h2 className="font-heading text-4xl md:text-5xl font-bold text-center mb-12" style={{ color: "var(--soft-brown)" }}>
             Catálogo & Valores
@@ -78,7 +77,6 @@ export default function Home() {
                 ))}
           </div>
 
-          {/* Instagram Section */}
           <div className="text-center">
             <a
               href="https://instagram.com/aurorababyloja"
@@ -90,12 +88,10 @@ export default function Home() {
               <Instagram className="w-5 h-5" />
               <span>Ver Modelos no Instagram</span>
             </a>
-            
             <InstagramFeed />
           </div>
         </section>
 
-        {/* Como Comprar */}
         <section id="comprar" className="pt-16 md:pt-20 pb-16">
           <h2 className="font-heading text-4xl md:text-5xl font-bold text-center mb-12" style={{ color: "var(--soft-brown)" }}>
             Como Comprar
@@ -162,7 +158,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CTA Final */}
         <section className="pt-16 md:pt-20 pb-16 text-center">
           <h2 className="font-heading text-4xl md:text-5xl font-bold mb-8" style={{ color: "var(--soft-brown)" }}>
             Pronta para Criar o Enxoval Perfeito?
@@ -170,11 +165,7 @@ export default function Home() {
           <p className="text-xl mb-8 max-w-2xl mx-auto" style={{ color: "rgba(82, 67, 48, 0.8)" }}>
             Vamos começar o processo de personalização hoje mesmo. Entre em contato conosco pelo WhatsApp!
           </p>
-          <a
-            href="https://wa.me/5527992941519"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href="https://wa.me/5527992941519" target="_blank" rel="noopener noreferrer">
             <Button className="text-white font-semibold text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all" style={{ backgroundColor: "var(--accent-blue)" }}>
               Iniciar Pedido via WhatsApp
             </Button>
@@ -183,6 +174,7 @@ export default function Home() {
       </main>
 
       <Footer />
+      <Cart />
 
       {selectedProduct && (
         <ProductModal
@@ -192,5 +184,13 @@ export default function Home() {
         />
       )}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <CartProvider>
+      <HomeContent />
+    </CartProvider>
   );
 }

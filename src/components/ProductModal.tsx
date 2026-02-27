@@ -1,7 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShoppingCart, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { useState } from "react";
+import { useCart } from "./CartContext";
 
 interface Product {
   id: string;
@@ -25,10 +26,11 @@ interface ProductModalProps {
 
 export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [added, setAdded] = useState(false);
+  const { addItem } = useCart();
 
   if (!product) return null;
 
-  // Combina main + gallery para o carrossel
   const allImages = [product.images.main, ...product.images.gallery];
   const currentImage = allImages[currentImageIndex];
 
@@ -40,10 +42,13 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
     setCurrentImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
   };
 
-  const handleWhatsApp = () => {
-    const phoneNumber = "5527992941519";
-    const message = encodeURIComponent(product.whatsappMessage);
-    window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
+  const handleAddToCart = () => {
+    addItem({ id: product.id, name: product.name, price: product.price });
+    setAdded(true);
+    setTimeout(() => {
+      setAdded(false);
+      onClose();
+    }, 1200);
   };
 
   return (
@@ -58,7 +63,6 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
           {/* Carrossel de Imagens */}
           <div className="flex flex-col gap-4">
-            {/* Imagem Principal */}
             <div
               className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border p-6"
               style={{
@@ -76,7 +80,6 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                 }}
               />
 
-              {/* Botões de Navegação */}
               {allImages.length > 1 && (
                 <>
                   <button
@@ -94,7 +97,6 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                 </>
               )}
 
-              {/* Indicador de Página */}
               {allImages.length > 1 && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/40 text-white px-3 py-1 rounded-full text-sm">
                   {currentImageIndex + 1} / {allImages.length}
@@ -102,16 +104,13 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
               )}
             </div>
 
-            {/* Miniaturas */}
             {allImages.length > 1 && (
               <div className="flex flex-wrap justify-center gap-3">
                 {allImages.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentImageIndex(idx)}
-                    className={`h-16 w-16 overflow-hidden rounded-xl border-2 transition-all ${
-                      idx === currentImageIndex ? "border-accent-coral" : "border-gray-200"
-                    }`}
+                    className="h-16 w-16 overflow-hidden rounded-xl border-2 transition-all"
                     style={{
                       borderColor: idx === currentImageIndex ? "var(--accent-coral)" : "rgba(82, 67, 48, 0.2)",
                       backgroundColor: "rgba(253, 214, 146, 0.1)",
@@ -134,27 +133,23 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
           {/* Detalhes do Produto */}
           <div className="flex flex-col justify-between">
-            {/* Título e Categoria */}
             <div>
               <p className="text-sm font-medium mb-2" style={{ color: "rgba(82, 67, 48, 0.6)" }}>
                 {product.category}
               </p>
 
-              {/* Preço */}
               <div className="mb-6">
                 <p className="text-4xl font-bold" style={{ color: "var(--soft-brown)" }}>
                   R$ {product.price}
                 </p>
               </div>
 
-              {/* Descrição */}
               <div className="mb-6">
                 <p className="text-base leading-relaxed font-body" style={{ color: "var(--soft-brown)" }}>
                   {product.description}
                 </p>
               </div>
 
-              {/* Especificações Técnicas */}
               {product.specs.length > 0 && (
                 <div className="mb-6">
                   <ul className="space-y-2">
@@ -173,7 +168,6 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                 </div>
               )}
 
-              {/* Nota Especial */}
               <div
                 className="p-4 rounded-lg mb-6 text-sm"
                 style={{ backgroundColor: "rgba(247, 182, 179, 0.1)", color: "var(--soft-brown)" }}
@@ -182,14 +176,22 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
               </div>
             </div>
 
-            {/* Botão WhatsApp */}
             <Button
-              onClick={handleWhatsApp}
+              onClick={handleAddToCart}
               className="w-full text-white font-semibold py-6 rounded-xl flex items-center justify-center gap-2 text-lg transition-all hover:shadow-lg"
-              style={{ backgroundColor: "var(--accent-blue)" }}
+              style={{ backgroundColor: added ? "#4caf50" : "var(--accent-blue)" }}
             >
-              <MessageSquare className="w-5 h-5" />
-              Pedir no WhatsApp
+              {added ? (
+                <>
+                  <Check className="w-5 h-5" />
+                  Adicionado!
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-5 h-5" />
+                  Adicionar ao Carrinho
+                </>
+              )}
             </Button>
           </div>
         </div>
