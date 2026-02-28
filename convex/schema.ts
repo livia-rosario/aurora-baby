@@ -43,6 +43,7 @@ export default defineSchema({
     createdAt: v.string(),
     updatedAt: v.string(),
     deliveryDate: v.optional(v.string()),
+    orderDate: v.optional(v.string()), // YYYY-MM-DD para filtro por mês
   }),
 
   orderItems: defineTable({

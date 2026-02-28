@@ -187,6 +187,7 @@ export const createOrder = mutation({
     observations: v.optional(v.string()),
     deliveryDate: v.optional(v.string()),
     initialPayment: v.optional(v.number()),
+    orderDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const totalValue = args.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
@@ -205,6 +206,7 @@ export const createOrder = mutation({
       createdAt: new Date().toLocaleString("pt-BR"),
       updatedAt: new Date().toLocaleString("pt-BR"),
       deliveryDate: args.deliveryDate || "",
+      orderDate: args.orderDate || new Date().toISOString().split("T")[0],
     });
 
     for (const item of args.items) {
