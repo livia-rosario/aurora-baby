@@ -33,7 +33,6 @@ const STATUS_BG: Record<string, string> = {
   "Entregue": "bg-gray-50 border-gray-100",
 };
 
-const TEMAS = ["Unicórnio", "Dinossauro", "Princesa", "Herói", "Astronauta", "Floresta", "Oceano", "Arco-íris", "Urso", "Coelho", "Customizado"];
 const EXPENSE_CATEGORIES = ["Tecido", "Linha", "Aviamento", "Embalagem", "Máquina/Equipamento", "Frete", "Marketing", "Outros"];
 
 type Tab = "orders" | "products" | "feed" | "expenses" | "financial" | "logs";
@@ -93,7 +92,7 @@ export default function Admin() {
   const [paymentInputs, setPaymentInputs] = useState<Record<string, string>>({});
   const [paymentNotes, setPaymentNotes] = useState<Record<string, string>>({});
   const [newOrder, setNewOrder] = useState({
-    clientName: "", clientPhone: "", babyName: "", theme: "Customizado",
+    clientName: "", clientPhone: "", babyName: "", theme: "",
     observations: "", items: [] as { productId: string; productName: string; quantity: number; unitPrice: number }[],
     initialPayment: "",
   });
@@ -714,9 +713,7 @@ export default function Admin() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-[#524330]">🎨 Tema</label>
-                  <select value={newOrder.theme} onChange={(e) => setNewOrder({ ...newOrder, theme: e.target.value })} className="w-full h-14 rounded-2xl border border-[#e5d5c5] text-base text-[#524330] px-4">
-                    {TEMAS.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                  <Input value={newOrder.theme} onChange={(e) => setNewOrder({ ...newOrder, theme: e.target.value })} className="h-14 rounded-2xl border-[#e5d5c5] text-base" placeholder="Ex: Ursinhos, Princesa, Dinossauro..." />
                 </div>
               </div>
 
