@@ -395,21 +395,6 @@ export default function Admin() {
 
                             {isExpanded && (
                               <div className="border-t border-gray-50 p-4 space-y-3 bg-gray-50/50">
-                                {/* Atribuir */}
-                                <div>
-                                  <p className="text-xs font-bold text-gray-400 mb-1.5">RESPONSÁVEL</p>
-                                  <select
-                                    value={order.assignedTo || ""}
-                                    onChange={(e) => handleStatusChange(order._id, order.status, e.target.value)}
-                                    className="w-full text-sm p-2 rounded-xl border border-[#e5d5c5] bg-white text-[#524330] font-semibold"
-                                  >
-                                    <option value="">Ninguém</option>
-                                    <option value="Miriam">Miriam</option>
-                                    <option value="Denize">Denize</option>
-                                    <option value="Lívia">Lívia</option>
-                                  </select>
-                                </div>
-
                                 {/* Avançar status */}
                                 <div className="flex gap-2">
                                   {STATUS_ORDER.indexOf(status) > 0 && (
