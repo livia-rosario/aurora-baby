@@ -539,7 +539,7 @@ export default function Admin() {
                 {metrics && Object.entries(metrics.byStatus).map(([status, count]) => (
                   <Card key={status} className="border border-[#e5d5c5] shadow-sm rounded-2xl">
                     <CardContent className="p-4 text-center">
-                      <p className="text-xs text-gray-400 mb-1">{status}</p>
+                      <p className="text-xs text-gray-400 mb-1">{status === "Personalizacao" ? "Personalização" : status}</p>
                       <p className="text-3xl font-bold text-[#524330]">{count as number}</p>
                     </CardContent>
                   </Card>

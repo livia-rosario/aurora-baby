@@ -288,10 +288,17 @@ export const getOrderMetrics = query({
     const inProductionOrders = orders.filter((o) => o.status !== "Entregue").length;
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
     const netProfit = totalReceived - totalExpenses;
-    const byStatus = Object.fromEntries(
-      ["Pedido Feito","Personalização","Acabamento","Pronto","Entregue"].map(s => [s, orders.filter(o => o.status === s).length])
-    );
-    return { totalOrders, totalRevenue, totalReceived, totalPending, deliveredOrders, inProductionOrders, totalExpenses, netProfit, byStatus };
+    return {
+      totalOrders, totalRevenue, totalReceived, totalPending,
+      deliveredOrders, inProductionOrders, totalExpenses, netProfit,
+      byStatus: {
+        "Pedido Feito": orders.filter(o => o.status === "Pedido Feito").length,
+        "Personalizacao": orders.filter(o => o.status === "Personalização").length,
+        "Acabamento": orders.filter(o => o.status === "Acabamento").length,
+        "Pronto": orders.filter(o => o.status === "Pronto").length,
+        "Entregue": orders.filter(o => o.status === "Entregue").length,
+      },
+    };
   },
 });
 
