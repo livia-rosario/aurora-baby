@@ -180,7 +180,7 @@ export default function Admin() {
 
   // Editar pedido
   const openEditOrder = (order: any) => {
-    setEditingOrder({ ...order, discount: String(order.discount || ""), items: order.items?.map((i: any) => ({ ...i })) || [] });
+    setEditingOrder({ ...order, discount: String(order.discount || ""), items: order.items?.map((i: any) => ({ productId: i.productId, productName: i.productName, quantity: i.quantity, unitPrice: i.unitPrice })) || [] });
   };
   const handleUpdateOrder = async () => {
     if (!editingOrder.clientName || !editingOrder.babyName || editingOrder.items.length === 0) { alert("Preencha os campos obrigatórios!"); return; }
