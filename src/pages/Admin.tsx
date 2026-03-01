@@ -93,7 +93,11 @@ export default function Admin() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [paymentInputs, setPaymentInputs] = useState<Record<string, string>>({});
   const [paymentNotes, setPaymentNotes] = useState<Record<string, string>>({});
-  const [filterMonth, setFilterMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [filterMonth, setFilterMonth] = useState("");
+  const [filterSearch, setFilterSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
 
   const emptyOrder = { clientName: "", clientPhone: "", babyName: "", theme: "", observations: "", items: [] as any[], initialPayment: "", orderDate: new Date().toISOString().split("T")[0], discount: "" };
   const [newOrder, setNewOrder] = useState(emptyOrder);
@@ -105,7 +109,10 @@ export default function Admin() {
   const [isAddingExpense, setIsAddingExpense] = useState(false);
 
   // Estados financeiro
-  const [finFilterMonth, setFinFilterMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [finDateFrom, setFinDateFrom] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`; });
+  const [finDateTo, setFinDateTo] = useState(() => new Date().toISOString().split("T")[0]);
+  const [expSearch, setExpSearch] = useState("");
+  const [expCat, setExpCat] = useState("");
 
   useEffect(() => {
     const savedUser = sessionStorage.getItem("admin_user");
@@ -258,9 +265,27 @@ export default function Admin() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const filteredOrders = orders?.filter((o: any) => (o.orderDate || "").startsWith(filterMonth)) || [];
-  const finFilteredOrders = orders?.filter((o: any) => (o.orderDate || "").startsWith(finFilterMonth)) || [];
-  const finFilteredExpenses = expenses?.filter((e: any) => e.date.startsWith(finFilterMonth)) || [];
+  const filteredOrders = (orders || []).filter((o: any) => {
+    const date = o.orderDate || "";
+    const search = filterSearch.toLowerCase();
+    if (filterSearch && !o.clientName?.toLowerCase().includes(search) && !o.babyName?.toLowerCase().includes(search) && !o.theme?.toLowerCase().includes(search)) return false;
+    if (filterStatus && o.status !== filterStatus) return false;
+    if (filterDateFrom && date < filterDateFrom) return false;
+    if (filterDateTo && date > filterDateTo) return false;
+    return true;
+  }).sort((a: any, b: any) => (b.orderDate || "").localeCompare(a.orderDate || ""));
+
+  const finFilteredOrders = (orders || []).filter((o: any) => {
+    const date = o.orderDate || "";
+    if (finDateFrom && date < finDateFrom) return false;
+    if (finDateTo && date > finDateTo) return false;
+    return true;
+  });
+  const finFilteredExpenses = (expenses || []).filter((e: any) => {
+    if (finDateFrom && e.date < finDateFrom) return false;
+    if (finDateTo && e.date > finDateTo) return false;
+    return true;
+  });
 
   if (!isLoggedIn) {
     return (
@@ -481,14 +506,46 @@ export default function Admin() {
               })}
             </div>
 
-            {/* Lista com filtro */}
+            {/* Lista com filtros */}
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-heading font-bold text-[#524330]">Todos os Pedidos</h3>
-                <input type="month" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)}
-                  className="h-9 px-3 rounded-xl border border-[#e5d5c5] text-sm text-[#524330] bg-white" />
+              <h3 className="text-base font-heading font-bold text-[#524330] mb-3">Todos os Pedidos</h3>
+
+              {/* Filtros */}
+              <div className="bg-white rounded-2xl border border-[#e5d5c5] p-3 mb-3 space-y-2">
+                <div className="flex gap-2">
+                  <Input value={filterSearch} onChange={(e) => setFilterSearch(e.target.value)}
+                    placeholder="🔍 Buscar por nome, bebê ou tema..."
+                    className="h-9 rounded-xl border-[#e5d5c5] text-sm flex-1" />
+                  <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+                    className="h-9 rounded-xl border border-[#e5d5c5] text-sm text-[#524330] px-2 bg-white flex-shrink-0">
+                    <option value="">Todos status</option>
+                    {STATUS_ORDER.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)}
+                    className="h-9 px-3 rounded-xl border border-[#e5d5c5] text-sm text-[#524330] bg-white flex-1" />
+                  <span className="text-xs text-gray-400 flex-shrink-0">até</span>
+                  <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)}
+                    className="h-9 px-3 rounded-xl border border-[#e5d5c5] text-sm text-[#524330] bg-white flex-1" />
+                  {(filterSearch || filterStatus || filterDateFrom || filterDateTo) && (
+                    <Button size="sm" variant="ghost" onClick={() => { setFilterSearch(""); setFilterStatus(""); setFilterDateFrom(""); setFilterDateTo(""); }}
+                      className="text-gray-400 hover:text-red-400 h-9 px-2 rounded-xl flex-shrink-0 text-xs">
+                      <X className="w-3.5 h-3.5 mr-1" /> Limpar
+                    </Button>
+                  )}
+                </div>
               </div>
+
               <div className="bg-white rounded-3xl border border-[#e5d5c5] shadow-sm overflow-hidden">
+                <div className="px-4 py-2 bg-gray-50 border-b border-[#e5d5c5] flex items-center justify-between">
+                  <span className="text-xs text-gray-400">{filteredOrders.length} pedido{filteredOrders.length !== 1 ? "s" : ""}</span>
+                  {filteredOrders.length > 0 && (
+                    <span className="text-xs text-gray-400">
+                      Total: R$ {filteredOrders.reduce((s: number, o: any) => s + o.totalValue, 0).toFixed(2)}
+                    </span>
+                  )}
+                </div>
                 {filteredOrders.length > 0 ? (
                   <div className="divide-y divide-gray-50">
                     {filteredOrders.map((order: any) => {
@@ -498,7 +555,7 @@ export default function Admin() {
                           onClick={() => setSelectedOrder(order)}>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm text-[#524330] truncate">{order.clientName}</p>
-                            <p className="text-xs text-gray-400 truncate">👶 {order.babyName}{order.theme ? ` · ${order.theme}` : ""}</p>
+                            <p className="text-xs text-gray-400 truncate">👶 {order.babyName}{order.theme ? ` · ${order.theme}` : ""} · {order.orderDate}</p>
                           </div>
                           <span className={`text-xs font-bold px-2 py-1 rounded-full border flex-shrink-0 ${STATUS_COLORS[order.status]}`}>{order.status}</span>
                           <div className="text-right flex-shrink-0">
@@ -511,7 +568,7 @@ export default function Admin() {
                     })}
                   </div>
                 ) : (
-                  <div className="p-10 text-center text-gray-300 italic text-sm">Nenhum pedido neste mês.</div>
+                  <div className="p-10 text-center text-gray-300 italic text-sm">Nenhum pedido encontrado.</div>
                 )}
               </div>
             </div>
@@ -523,69 +580,97 @@ export default function Admin() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-heading font-bold text-[#524330]">Financeiro</h2>
-              <div className="flex items-center gap-2">
-                <input type="month" value={finFilterMonth} onChange={(e) => setFinFilterMonth(e.target.value)}
-                  className="h-9 px-3 rounded-xl border border-[#e5d5c5] text-sm text-[#524330] bg-white" />
-                <Button onClick={() => setIsAddingExpense(true)} className="bg-[#a5daeb] hover:bg-[#8ecce0] text-[#524330] font-bold rounded-full h-9 px-4 gap-1 text-xs">
-                  <Plus className="w-3.5 h-3.5" /> Saída
-                </Button>
+              <Button onClick={() => setIsAddingExpense(true)} className="bg-[#a5daeb] hover:bg-[#8ecce0] text-[#524330] font-bold rounded-full h-9 px-4 gap-1 text-xs">
+                <Plus className="w-3.5 h-3.5" /> Saída
+              </Button>
+            </div>
+
+            {/* Filtro de período */}
+            <div className="bg-white rounded-2xl border border-[#e5d5c5] p-3 flex flex-wrap gap-2 items-center">
+              <span className="text-xs font-bold text-gray-400">Período:</span>
+              <input type="date" value={finDateFrom} onChange={(e) => setFinDateFrom(e.target.value)}
+                className="h-9 px-3 rounded-xl border border-[#e5d5c5] text-sm text-[#524330] bg-white flex-1 min-w-[120px]" />
+              <span className="text-xs text-gray-400">até</span>
+              <input type="date" value={finDateTo} onChange={(e) => setFinDateTo(e.target.value)}
+                className="h-9 px-3 rounded-xl border border-[#e5d5c5] text-sm text-[#524330] bg-white flex-1 min-w-[120px]" />
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="outline" onClick={() => { const d = new Date(); setFinDateFrom(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`); setFinDateTo(d.toISOString().split("T")[0]); }}
+                  className="rounded-xl border-[#e5d5c5] text-[#524330] text-xs h-9 px-3">Mês</Button>
+                <Button size="sm" variant="outline" onClick={() => { setFinDateFrom(`${new Date().getFullYear()}-01-01`); setFinDateTo(new Date().toISOString().split("T")[0]); }}
+                  className="rounded-xl border-[#e5d5c5] text-[#524330] text-xs h-9 px-3">Ano</Button>
+                <Button size="sm" variant="outline" onClick={() => { setFinDateFrom(""); setFinDateTo(""); }}
+                  className="rounded-xl border-[#e5d5c5] text-[#524330] text-xs h-9 px-3">Tudo</Button>
               </div>
             </div>
 
-            {/* Insights de produção */}
+            {/* Cards financeiros do período */}
+            {(() => {
+              const revenue = finFilteredOrders.reduce((s: number, o: any) => s + o.totalValue, 0);
+              const received = finFilteredOrders.reduce((s: number, o: any) => s + o.amountPaid, 0);
+              const pending = revenue - received;
+              const expTotal = finFilteredExpenses.reduce((s: number, e: any) => s + e.amount, 0);
+              const profit = received - expTotal;
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {[
+                    { label: "Faturamento", value: `R$ ${revenue.toFixed(2)}`, color: "text-blue-600" },
+                    { label: "Recebido", value: `R$ ${received.toFixed(2)}`, color: "text-green-600" },
+                    { label: "A Receber", value: `R$ ${pending.toFixed(2)}`, color: "text-orange-500" },
+                    { label: "Saídas", value: `R$ ${expTotal.toFixed(2)}`, color: "text-red-500" },
+                    { label: "Lucro Líquido", value: `R$ ${profit.toFixed(2)}`, color: profit >= 0 ? "text-green-600" : "text-red-500" },
+                    { label: "Pedidos", value: String(finFilteredOrders.length), color: "text-[#524330]" },
+                  ].map((c) => (
+                    <Card key={c.label} className="border border-[#e5d5c5] shadow-sm rounded-2xl">
+                      <CardContent className="p-4">
+                        <p className="text-xs text-gray-400 mb-1">{c.label}</p>
+                        <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {/* Pedidos do período */}
             <div>
-              <h3 className="text-sm font-bold text-gray-400 uppercase mb-3">Produção</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {metrics && Object.entries(metrics.byStatus).map(([status, count]) => (
-                  <Card key={status} className="border border-[#e5d5c5] shadow-sm rounded-2xl">
-                    <CardContent className="p-4 text-center">
-                      <p className="text-xs text-gray-400 mb-1">{status === "Personalizacao" ? "Personalização" : status}</p>
-                      <p className="text-3xl font-bold text-[#524330]">{count as number}</p>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-gray-400 uppercase">Entradas</h3>
+                <span className="text-xs text-gray-400">{finFilteredOrders.length} pedidos · R$ {finFilteredOrders.reduce((s: number, o: any) => s + o.totalValue, 0).toFixed(2)}</span>
               </div>
-            </div>
 
-            {/* Insights financeiros do mês */}
-            <div>
-              <h3 className="text-sm font-bold text-gray-400 uppercase mb-3">Financeiro — {finFilterMonth}</h3>
-              {(() => {
-                const monthRevenue = finFilteredOrders.reduce((s: number, o: any) => s + o.totalValue, 0);
-                const monthReceived = finFilteredOrders.reduce((s: number, o: any) => s + o.amountPaid, 0);
-                const monthPending = monthRevenue - monthReceived;
-                const monthExpenses = finFilteredExpenses.reduce((s: number, e: any) => s + e.amount, 0);
-                const monthProfit = monthReceived - monthExpenses;
-                return (
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { label: "Faturamento", value: `R$ ${monthRevenue.toFixed(2)}`, color: "text-blue-600" },
-                      { label: "Recebido", value: `R$ ${monthReceived.toFixed(2)}`, color: "text-green-600" },
-                      { label: "A Receber", value: `R$ ${monthPending.toFixed(2)}`, color: "text-orange-500" },
-                      { label: "Saídas", value: `R$ ${monthExpenses.toFixed(2)}`, color: "text-red-500" },
-                      { label: "Lucro Líquido", value: `R$ ${monthProfit.toFixed(2)}`, color: monthProfit >= 0 ? "text-green-600" : "text-red-500" },
-                      { label: "Pedidos", value: String(finFilteredOrders.length), color: "text-[#524330]" },
-                    ].map((c) => (
-                      <Card key={c.label} className="border border-[#e5d5c5] shadow-sm rounded-2xl">
-                        <CardContent className="p-4">
-                          <p className="text-xs text-gray-400 mb-1">{c.label}</p>
-                          <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                );
-              })()}
-            </div>
+              {/* Filtros da tabela de pedidos financeiro */}
+              <div className="bg-white rounded-2xl border border-[#e5d5c5] p-3 mb-2 flex gap-2">
+                <Input value={filterSearch} onChange={(e) => setFilterSearch(e.target.value)}
+                  placeholder="🔍 Buscar cliente ou bebê..."
+                  className="h-9 rounded-xl border-[#e5d5c5] text-sm flex-1" />
+                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+                  className="h-9 rounded-xl border border-[#e5d5c5] text-sm text-[#524330] px-2 bg-white flex-shrink-0">
+                  <option value="">Todos</option>
+                  {STATUS_ORDER.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                {(filterSearch || filterStatus) && (
+                  <Button size="sm" variant="ghost" onClick={() => { setFilterSearch(""); setFilterStatus(""); }}
+                    className="text-gray-400 hover:text-red-400 h-9 px-2 rounded-xl flex-shrink-0">
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+              </div>
 
-            {/* Pedidos do mês */}
-            <div>
-              <h3 className="text-sm font-bold text-gray-400 uppercase mb-3">Pedidos do mês</h3>
               <div className="bg-white rounded-3xl border border-[#e5d5c5] overflow-hidden">
-                {finFilteredOrders.length > 0 ? (
+                {finFilteredOrders.filter((o: any) => {
+                  const s = filterSearch.toLowerCase();
+                  if (filterSearch && !o.clientName?.toLowerCase().includes(s) && !o.babyName?.toLowerCase().includes(s)) return false;
+                  if (filterStatus && o.status !== filterStatus) return false;
+                  return true;
+                }).length > 0 ? (
                   <div className="divide-y divide-gray-50">
-                    {finFilteredOrders.map((order: any) => {
-                      const pending = order.totalValue - order.amountPaid;
+                    {finFilteredOrders.filter((o: any) => {
+                      const s = filterSearch.toLowerCase();
+                      if (filterSearch && !o.clientName?.toLowerCase().includes(s) && !o.babyName?.toLowerCase().includes(s)) return false;
+                      if (filterStatus && o.status !== filterStatus) return false;
+                      return true;
+                    }).map((order: any) => {
+                      const pend = order.totalValue - order.amountPaid;
                       return (
                         <div key={order._id} className="px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50"
                           onClick={() => { setSelectedOrder(order); setActiveTab("orders"); }}>
@@ -596,38 +681,70 @@ export default function Admin() {
                           <span className={`text-xs font-bold px-2 py-1 rounded-full border flex-shrink-0 ${STATUS_COLORS[order.status]}`}>{order.status}</span>
                           <div className="text-right flex-shrink-0">
                             <p className="text-sm font-bold text-[#524330]">R$ {order.totalValue.toFixed(2)}</p>
-                            {pending > 0 ? <p className="text-xs text-orange-500">- R$ {pending.toFixed(2)}</p> : <p className="text-xs text-green-500">✅ Pago</p>}
+                            {pend > 0 ? <p className="text-xs text-orange-500">- R$ {pend.toFixed(2)}</p> : <p className="text-xs text-green-500">✅ Pago</p>}
                           </div>
                         </div>
                       );
                     })}
                   </div>
-                ) : <div className="p-8 text-center text-gray-300 italic text-sm">Nenhum pedido neste mês.</div>}
+                ) : <div className="p-8 text-center text-gray-300 italic text-sm">Nenhum pedido encontrado.</div>}
               </div>
             </div>
 
-            {/* Saídas do mês */}
+            {/* Saídas do período */}
             <div>
-              <h3 className="text-sm font-bold text-gray-400 uppercase mb-3">Saídas do mês</h3>
-              <div className="bg-white rounded-3xl border border-[#e5d5c5] overflow-hidden">
-                {finFilteredExpenses.length > 0 ? (
-                  <div className="divide-y divide-gray-50">
-                    {finFilteredExpenses.map((expense: any) => (
-                      <div key={expense._id} className="px-4 py-3 flex items-center gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-[#524330] truncate">{expense.description}</p>
-                          <p className="text-xs text-gray-400">{expense.category} · {expense.date}</p>
-                        </div>
-                        <p className="text-sm font-bold text-red-500 flex-shrink-0">- R$ {expense.amount.toFixed(2)}</p>
-                        <Button variant="ghost" size="sm" onClick={() => { if (confirm("Excluir?")) deleteExpense({ id: expense._id }); }}
-                          className="text-red-300 hover:text-red-500 p-1.5 rounded-xl flex-shrink-0">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : <div className="p-8 text-center text-gray-300 italic text-sm">Nenhuma saída neste mês.</div>}
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-gray-400 uppercase">Saídas</h3>
+                <span className="text-xs text-gray-400">{finFilteredExpenses.length} lançamentos · R$ {finFilteredExpenses.reduce((s: number, e: any) => s + e.amount, 0).toFixed(2)}</span>
               </div>
+
+              {/* Filtro categoria */}
+              {(() => {
+                const filtered = finFilteredExpenses.filter((e: any) => {
+                  if (expSearch && !e.description?.toLowerCase().includes(expSearch.toLowerCase())) return false;
+                  if (expCat && e.category !== expCat) return false;
+                  return true;
+                });
+                return (
+                  <>
+                    <div className="bg-white rounded-2xl border border-[#e5d5c5] p-3 mb-2 flex gap-2">
+                      <Input value={expSearch} onChange={(e) => setExpSearch(e.target.value)}
+                        placeholder="🔍 Buscar descrição..."
+                        className="h-9 rounded-xl border-[#e5d5c5] text-sm flex-1" />
+                      <select value={expCat} onChange={(e) => setExpCat(e.target.value)}
+                        className="h-9 rounded-xl border border-[#e5d5c5] text-sm text-[#524330] px-2 bg-white flex-shrink-0">
+                        <option value="">Todas categorias</option>
+                        {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      {(expSearch || expCat) && (
+                        <Button size="sm" variant="ghost" onClick={() => { setExpSearch(""); setExpCat(""); }}
+                          className="text-gray-400 hover:text-red-400 h-9 px-2 rounded-xl flex-shrink-0">
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="bg-white rounded-3xl border border-[#e5d5c5] overflow-hidden">
+                      {filtered.length > 0 ? (
+                        <div className="divide-y divide-gray-50">
+                          {filtered.map((expense: any) => (
+                            <div key={expense._id} className="px-4 py-3 flex items-center gap-3">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm text-[#524330] truncate">{expense.description}</p>
+                                <p className="text-xs text-gray-400">{expense.category} · {expense.date}</p>
+                              </div>
+                              <p className="text-sm font-bold text-red-500 flex-shrink-0">- R$ {expense.amount.toFixed(2)}</p>
+                              <Button variant="ghost" size="sm" onClick={() => { if (confirm("Excluir?")) deleteExpense({ id: expense._id }); }}
+                                className="text-red-300 hover:text-red-500 p-1.5 rounded-xl flex-shrink-0">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : <div className="p-8 text-center text-gray-300 italic text-sm">Nenhuma saída encontrada.</div>}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
