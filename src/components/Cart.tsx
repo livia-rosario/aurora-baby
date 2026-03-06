@@ -21,7 +21,7 @@ export function Cart() {
       `\n\n*Total: R$ ${total.toFixed(2)}*\n\nPoderia me passar mais informações?`;
 
     const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/5527992941519?text=${encoded}`, "_blank");
+    window.open(`https://wa.me/5527997352336?text=${encoded}`, "_blank");
   };
 
   return (

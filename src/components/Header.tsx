@@ -42,7 +42,7 @@ export function Header() {
               Como Comprar
             </button>
             <a
-              href="https://wa.me/5527992941519"
+              href="https://wa.me/5527997352336"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-2 px-5 py-2 rounded-full text-white font-semibold transition duration-300 shadow-md hover:shadow-lg"
@@ -86,7 +86,7 @@ export function Header() {
               Como Comprar
             </button>
             <a
-              href="https://wa.me/5527992941519"
+              href="https://wa.me/5527997352336"
               target="_blank"
               rel="noopener noreferrer"
               className="block py-2 px-3 rounded-md transition duration-200"

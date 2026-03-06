@@ -165,7 +165,7 @@ function HomeContent() {
           <p className="text-xl mb-8 max-w-2xl mx-auto" style={{ color: "rgba(82, 67, 48, 0.8)" }}>
             Vamos começar o processo de personalização hoje mesmo. Entre em contato conosco pelo WhatsApp!
           </p>
-          <a href="https://wa.me/5527992941519" target="_blank" rel="noopener noreferrer">
+          <a href="https://wa.me/5527997352336" target="_blank" rel="noopener noreferrer">
             <Button className="text-white font-semibold text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all" style={{ backgroundColor: "var(--accent-blue)" }}>
               Iniciar Pedido via WhatsApp
             </Button>

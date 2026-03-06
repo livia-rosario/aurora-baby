@@ -20,7 +20,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-2">
               <li><a href="#catalogo" className="text-sm hover:underline" style={{ color: 'rgba(82, 67, 48, 0.7)' }}>Catálogo</a></li>
               <li><a href="#comprar" className="text-sm hover:underline" style={{ color: 'rgba(82, 67, 48, 0.7)' }}>Como Comprar</a></li>
-              <li><a href="https://wa.me/5527992941519" target="_blank" rel="noopener noreferrer" className="text-sm hover:underline" style={{ color: 'rgba(82, 67, 48, 0.7)' }}>Contato</a></li>
+              <li><a href="https://wa.me/5527997352336" target="_blank" rel="noopener noreferrer" className="text-sm hover:underline" style={{ color: 'rgba(82, 67, 48, 0.7)' }}>Contato</a></li>
             </ul>
           </div>
 
